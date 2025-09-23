@@ -32,7 +32,7 @@ ALLOWED_ORIGINS = [
     "https://lab4-proof.onrender.com",   # your Reflections frontend
     "http://localhost:3000",             # local dev
 ]
-(
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://hive-api-2le8.onrender.com/"], 
@@ -719,6 +719,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
