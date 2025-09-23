@@ -2,6 +2,7 @@ from __future__ import annotations
 import hashlib
 import json
 from typing import Iterable, Any
+from app.hash_helpers import sha256_json
 
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
@@ -26,4 +27,5 @@ def merkle_root(leaves: Iterable[str]) -> str:
             nxt.append(sha256_bytes((a + b).encode("utf-8")))
         layer = nxt
     return layer[0]
+
 
