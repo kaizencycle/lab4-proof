@@ -1,0 +1,22 @@
+```
+version: "3.9"
+services:
+  backend:
+    build: ./app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+
+  frontend:
+    build: ./reflections
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+
+```
+      - backend  
