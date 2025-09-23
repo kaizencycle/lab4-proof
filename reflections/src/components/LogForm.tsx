@@ -1,4 +1,3 @@
-```
 import { useState } from 'react';
 
 export default function LogForm({ onSubmit }: { onSubmit: (note: string) => Promise<void> }) {
