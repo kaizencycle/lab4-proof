@@ -1,13 +1,46 @@
-# Backend: FastAPI
+```
+# -------- BUILD STAGE (optional, for wheels cache) ----------
+FROM python:3.11-slim AS build
+
+WORKDIR /wheels
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --wheel-dir=/wheels -r requirements.txt
+
+# -------- RUNTIME STAGE ----------
 FROM python:3.11-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UVICORN_HOST=0.0.0.0 \
+    UVICORN_PORT=8000
+
+# Add a non-root user
+RUN useradd -m appuser
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install runtime deps + wheels from build stage
+COPY --from=build /wheels /wheels
+RUN pip install --no-cache-dir --find-links=/wheels -r /wheels/../requirements.txt
 
-COPY ./app ./app
+# Copy app code
+COPY . /app
 
+# (Optional) create data dirs if your app expects them
+RUN mkdir -p /app/data /app/backups && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+# Healthcheck (adjust path if your health endpoint differs)
+HEALTHCHECK --interval=30s --timeout=3s --retries=5 CMD curl -fsS http://127.0.0.1:8000/health || exit 1
+
+# Start FastAPI (adjust module:path if not app.main:app)
 
 ```
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]  
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]  
+  
+If your ASGI app lives elsewhere (e.g., app.main:app), change the last line accordingly.  
+  
+⸻  
