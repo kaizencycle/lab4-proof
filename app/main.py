@@ -319,6 +319,17 @@ def routes():
 async def reflect(note: dict):
     return {"status": "success", "data": note}
 
+# --- Public config so the UI can display live rules ---
+@app.get("/config")
+def config():
+    return {
+        "demo_mode": DEMO_MODE,
+        "gic_per_private": GIC_PER_PRIVATE,
+        "gic_per_publish": GIC_PER_PUBLISH,
+        "reward_min_len": REWARD_MIN_LEN,
+        "service": "HIVE-PAW API",
+    }
+    
 @app.get("/")
 def read_root():
     return {"status": "API is live", "message": "Hello from Reflections!"}
@@ -730,6 +741,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
