@@ -22,6 +22,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 
+import StatusBar from '@/components/StatusBar'; // add this
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        <DemoBadge />
+        <StatusBar />   {/* add this line */}
+        {children}
+      </body>
+    </html>
+  );
+}
+
 export default function RootLayout({
   children,
 }: {
