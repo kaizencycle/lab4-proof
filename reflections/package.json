@@ -15,9 +15,10 @@
     "dayjs": "1.11.13"  
   },
   "devDependencies":{
-    "typescript': "5.4.5",
+    "typescript": "5.4.5",
     "@types/react": "18.3.3",
     "@types/nodes": "20.11.30"
   }
 }
+
 
