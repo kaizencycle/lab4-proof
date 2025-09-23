@@ -39,7 +39,7 @@ app.add_middleware(
         "https://lab4-proof.onrender.com",
         "https://localhost:3000"],
     allow_credentials=True.
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
     
@@ -722,6 +722,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
