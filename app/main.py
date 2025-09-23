@@ -301,6 +301,10 @@ def routes():
 @app.get("/")
 def read_root():
     return {"status": "API is live", "message": "Hello from Reflections!"}
+
+@app.get("/reflections")
+def reflections():
+    return {"data": "Here's where your relections API will serve data"}
     
 @app.post("/seed")
 def post_seed(payload: Seed):
@@ -705,4 +709,5 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
