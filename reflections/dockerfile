@@ -8,6 +8,7 @@ RUN npm ci
 
 # Copy the rest and build
 COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
 # If you use NEXT_PUBLIC_* envs, set them at build time via Render “Env Vars”
 RUN npm run build
 
