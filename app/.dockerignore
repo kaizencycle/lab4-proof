@@ -1,17 +1,28 @@
 ```
+# git / editor
+.git
+.gitignore
+.vscode
+.idea
+
+# python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.log
-.env
-.venv/
+*.pytest_cache
+.venv
+env/
 venv/
-.git/
-.gitignore
+
+# node / frontend stuff (if any sneaks in)
 node_modules/
-backups/*.zip
-backups/*.json
-data/*.json
+.next/
+out/
+
+# large or local-only things
+backups/
+data/
 
 ```
+*.log 
