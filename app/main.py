@@ -19,10 +19,10 @@ except Exception:
     os.environ.setdefault("NETWORK_ID", "Kaizen-DVA")
     os.environ.setdefault("VERSION", "0.1.0")
 
-from .hashing import sha256_json, merkle_root
-from .storage import today_files, read_json, write_json, load_day, build_ledger_obj, DATA_DIR, get_node_metadata
-from .hash_helpers import build_day_root
-from .models import BonusRun
+from app.hashing import sha256_json, merkle_root
+from app.storage import today_files, read_json, write_json, load_day, build_ledger_obj, DATA_DIR, get_node_metadata
+from app.hash_helpers import build_day_root
+from app.models import BonusRun
 
 app = FastAPI(title="HIVE-PAW API (with ledger)", version="0.12.0")
 
@@ -699,4 +699,5 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "dry": req.dry,
         "preview": dry_dumps if req.dry else None,
         "file": str(payout_file),
+
     }
