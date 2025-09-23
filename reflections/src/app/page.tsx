@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dayjs from "dayjs";
-import { logReflection } from "@/lib/api";
+import { logReflection } from "../lib/api";
 
 type ApiResult = {
   status?: string;
