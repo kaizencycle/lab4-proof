@@ -1,8 +1,9 @@
 ```
-node_modules/
-.next/
-.env
-.git/
-.gitignore
+node_modules
+.next
+.git
+Dockerfile
+docker-compose.yml
+*.log
 
 ```
