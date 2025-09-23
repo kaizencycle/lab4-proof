@@ -32,23 +32,14 @@ ALLOWED_ORIGINS = [
     "https://lab4-proof.onrender.com",   # your Reflections frontend
     "http://localhost:3000",             # local dev
 ]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,   # or ["*"] while testing
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
-)
-
-# Add CORS middleware
+(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://hive-api-2le8.onrender.com/"], 
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
-
+    
 # ──────────────────────────────────────────────────────────────────────────────
 # GIC REWARDS CONFIG + HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
@@ -728,6 +719,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
