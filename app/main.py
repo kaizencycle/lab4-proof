@@ -26,6 +26,21 @@ from app.models import BonusRun
 
 app = FastAPI(title="HIVE-PAW API (with ledger)", version="0.12.0")
 
+from fastapi.middleware.cors import CORSMiddleware
+
+ALLOWED_ORIGINS = [
+    "https://lab4-proof.onrender.com",   # your Reflections frontend
+    "http://localhost:3000",             # local dev
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,   # or ["*"] while testing
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -709,5 +724,6 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
