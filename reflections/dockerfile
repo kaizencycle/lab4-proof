@@ -1,0 +1,15 @@
+# Frontend: Next.js
+FROM node:18-alpine
+
+WORKDIR /reflections
+
+COPY reflections/package*.json ./
+RUN npm install --frozen-lockfile
+
+COPY reflections/ .
+
+RUN npm run build
+
+
+```
+CMD ["npm", "start"]  
