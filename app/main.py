@@ -55,8 +55,6 @@ if DEMO_MODE:
 else:
     GIC_PER_PRIVATE = int(os.getenv("GIC_PER_PRIVATE", "10"))
     GIC_PER_PUBLISH = int(os.getenv("GIC_PER_PUBLISH", "25"))
-
-```
     REWARD_MIN_LEN  = int(os.getenv("REWARD_MIN_LEN", "200"))  
 
 # New "featured" submission marker (base reward same as publish now; weekly bonus later)
@@ -741,6 +739,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
