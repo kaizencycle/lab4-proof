@@ -44,7 +44,7 @@ app.add_middleware(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # add your prod domain later
+    allow_origins=["https://hive-api-2le8.onrender.com/"], 
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -312,6 +312,10 @@ def routes():
 # ──────────────────────────────────────────────────────────────────────────────
 # WRITE ENDPOINTS
 # ──────────────────────────────────────────────────────────────────────────────
+
+@app.post("/reflect")
+async def reflect(note: dict):
+    return {"status": "success", "data": note}
 
 @app.get("/")
 def read_root():
@@ -724,6 +728,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
