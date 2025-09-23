@@ -298,6 +298,10 @@ def routes():
 # WRITE ENDPOINTS
 # ──────────────────────────────────────────────────────────────────────────────
 
+@app.get("/")
+def read_root():
+    return {"status": "API is live", "message": "Hello from Reflections!"}
+    
 @app.post("/seed")
 def post_seed(payload: Seed):
     files = today_files(payload.date)
@@ -701,3 +705,4 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
