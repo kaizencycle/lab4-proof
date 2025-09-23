@@ -1,0 +1,17 @@
+```
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.env
+.venv/
+venv/
+.git/
+.gitignore
+node_modules/
+backups/*.zip
+backups/*.json
+data/*.json
+
+```
