@@ -21,6 +21,19 @@ export default function LogForm({ onSubmit }: Props) {
     }  
   }  
   
+import DemoBadge from '../components/DemoBadge'; // ⬅️ add this import
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <DemoBadge />   {/* ⬅️ add this line */}
+        {children}
+      </body>
+    </html>
+  );
+}
+  
   return (  
     <form onSubmit={submit} style={{  
       background: '#111', border: '1px solid #2a2a2a', borderRadius: 12, padding: 16  
