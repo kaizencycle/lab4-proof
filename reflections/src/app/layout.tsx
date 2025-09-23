@@ -4,11 +4,6 @@ import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-  title: 'Reflections — GIC Rewards',
-  description: 'Log your thoughts; earn GIC; seal your day.',
-}
-
 import DemoBadge from '../components/DemoBadge'; // ⬅️ add this import
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -34,6 +29,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </body>
     </html>
   );
+}
+
+export const metadata: Metadata = {
+  title: 'Reflections — GIC Rewards',
+  description: 'Log your thoughts; earn GIC; seal your day.',
 }
 
 export default function RootLayout({
