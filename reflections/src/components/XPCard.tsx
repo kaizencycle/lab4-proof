@@ -1,4 +1,3 @@
-```
 export default function XPCard({ xp }: { xp: number }) {
   return (
     <div style={{
@@ -10,5 +9,3 @@ export default function XPCard({ xp }: { xp: number }) {
     </div>
   );
 }
-
-```
