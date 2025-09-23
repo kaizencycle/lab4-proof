@@ -1,22 +1,35 @@
 ```
 version: "3.9"
+
 services:
-  backend:
-    build: ./app
+  api:
+    build:
+      context: ./app
+    container_name: hivepaw-api
+    env_file:
+      - .env
     ports:
       - "8000:8000"
+    # Mount data if you want local persistence while developing:
+    volumes:
+      - ./app/data:/app/data
+      - ./app/backups:/app/backups
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+
+  reflections:
+    build:
+      context: ./reflections
+    container_name: reflections-web
     env_file:
       - .env
-    volumes:
-      - ./data:/app/data
-
-  frontend:
-    build: ./reflections
     ports:
       - "3000:3000"
-    env_file:
-      - .env
     depends_on:
+      api:
 
 ```
-      - backend  
+        condition: service_healthy  
