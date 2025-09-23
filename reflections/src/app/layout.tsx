@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import DemoBadge from '../components/DemoBadge'; // ⬅️ add this import
+import StatusBar from '@/components/StatusBar'; // add this
 
 const inter = Inter({ subsets: ['latin'] })
-
-import DemoBadge from '../components/DemoBadge'; // ⬅️ add this import
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,8 +16,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
-
-import StatusBar from '@/components/StatusBar'; // add this
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
