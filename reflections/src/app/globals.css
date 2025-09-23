@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark baseline */
+:root { color-scheme: dark; }
+html, body { @apply bg-black text-white; }
+button { @apply transition active:translate-y-[1px]; }
+
+input, textarea, select { @apply bg-transparent text-white placeholder-zinc-500; }
