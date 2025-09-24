@@ -1,49 +1,43 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import dayjs from "dayjs";
-import { logReflection } from "../lib/api";
+import { useState } from 'react';
+import LogForm from '@/components/LogForm';
+import { logReflection } from '@/lib/api';
 
-type ApiResult = {
-  status?: string;
-  message?: string;
-  gic_awarded?: number;
-  xp_total?: number;
-  error?: string;
-};
+export default function HomePage() {
+  const [lastAward, setLastAward] = useState<number | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
 
-export default function Page() {
-  const [text, setText] = useState("");
-  const [publish, setPublish] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<ApiResult | null>(null);
-
-  const today = dayjs().format("YYYY-MM-DD");
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!text.trim()) return;
-
-    setBusy(true);
-    setResult(null);
+  async function handleSubmit(note: string, publish: boolean) {
+    setStatus(null);
+    setLastAward(null);
     try {
-      const payload = {
-        date: today,
-        text,
-        publish,            // false = private, true = public (higher GIC in future)
-        channel: "reflections",
-        meta: { client: "web", v: 1 },
-      };
-
-      const res = await logReflection(payload);
-      setResult(res);
-      setText("");
-    } catch (err: any) {
-      setResult({ error: err?.message ?? "Failed to log reflection" });
-    } finally {
-      setBusy(false);
+      const res = await logReflection({ note, publish });
+      setLastAward(res?.gic_awarded ?? res?.gic_delta ?? 0);
+      setStatus('ok');
+    } catch (e: any) {
+      setStatus(e?.message || 'error');
     }
   }
+
+  return (
+    <main style={{ maxWidth: 720, margin: '40px auto', padding: 16 }}>
+      <h1>Welcome to Agora</h1>
+      <LogForm onSubmit={handleSubmit} />
+
+      {status === 'ok' && (
+        <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: '#0e2a17', color: '#b9f6ca' }}>
+          Success — GIC Awarded: {lastAward ?? 0}
+        </div>
+      )}
+      {status && status !== 'ok' && (
+        <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: '#2a1111', color: '#ffdede' }}>
+          {status}
+        </div>
+      )}
+    </main>
+  );
+}
 
   return (
     <main style={{ minHeight: "100vh", background: "#0b0b0f", color: "#eaeaea" }}>
