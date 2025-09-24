@@ -88,6 +88,51 @@ function MetricsBar({metrics, onRefresh}:{metrics:any, onRefresh:()=>void}) {
   );
 }
 
+function onSetToken() {
+  sessionStorage.setItem("ADMIN_TOKEN", token);
+  setOk(true); // so the effect above starts SSE
+}
+
+// inside AdminPage component
+useEffect(() => {
+  if (!ok) return;
+
+  // Build stream URL (proxy recommended for header tokens; see below)
+  // Direct to API with token in query for simplicity:
+  const base = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/, "");
+  const url = `${base}/admin/agents/stream?token=${encodeURIComponent(token)}`;
+
+  const es = new EventSource(url);
+
+  es.addEventListener("hello", (e) => {
+    // optional: console.log("SSE hello", e.data);
+  });
+
+  es.addEventListener("snapshot", (e: MessageEvent) => {
+    try {
+      const { agents: a, totals } = JSON.parse(e.data);
+      setAgents(a);
+      setMetrics({ totals });
+    } catch {}
+  });
+
+  es.addEventListener("error", (e: MessageEvent) => {
+    // backend emits "error" event with JSON body
+    try {
+      const payload = JSON.parse(e.data);
+      setErr(payload.error || "stream error");
+    } catch {
+      setErr("stream error");
+    }
+  });
+
+  es.onerror = () => {
+    setErr("connection lost, retrying…");
+  };
+
+  return () => es.close();
+}, [ok, token]);
+
 function NodeGraph({agents}:{agents:Agent[]}) {
   const canvasRef = useRef<HTMLCanvasElement|null>(null);
   const nodes = useMemo(()=>{
