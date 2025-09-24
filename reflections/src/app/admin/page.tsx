@@ -88,11 +88,6 @@ function MetricsBar({metrics, onRefresh}:{metrics:any, onRefresh:()=>void}) {
   );
 }
 
-function onSetToken() {
-  sessionStorage.setItem("ADMIN_TOKEN", token);
-  setOk(true); // so the effect above starts SSE
-}
-
 // inside AdminPage component
 useEffect(() => {
   if (!ok) return;
@@ -146,6 +141,11 @@ function NodeGraph({agents}:{agents:Agent[]}) {
     }));
   }, [agents]);
 
+  function onSetToken() {
+  sessionStorage.setItem("ADMIN_TOKEN", token);
+  setOk(true); // so the effect above starts SSE
+}
+  
   useEffect(()=>{
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
