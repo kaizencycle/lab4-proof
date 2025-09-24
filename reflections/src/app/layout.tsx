@@ -8,8 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Reflections — GIC Rewards',
-  description: 'Log your thoughts; earn GIC; seal your day.',
-}
+  description: 'Log your thoughts; earn GIC; seal your day.',}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
