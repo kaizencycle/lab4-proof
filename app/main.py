@@ -93,6 +93,15 @@ def append_jsonl(file_path: str, record: dict) -> str:
     
     return sha256_json(record)
 
+def _humanize_seconds(s: int) -> str:
+    if s <= 0: return "now"
+    m, sec = divmod(s, 60)
+    h, m = divmod(m, 60)
+    d, h = divmod(h, 24)
+    if d:  return f"{d}d {h}h"
+    if h:  return f"{h}h {m}m"
+    if m:  return f"{m}m {sec}s"
+
 # ──────────────────────────────────────────────────────────────────────────────
 # VERIFY HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
@@ -781,6 +790,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
