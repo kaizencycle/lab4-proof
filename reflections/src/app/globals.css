@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-import './globals.css'
 
 /* Dark baseline */
 :root { color-scheme: dark; }
