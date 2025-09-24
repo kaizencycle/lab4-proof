@@ -24,6 +24,45 @@ async def get_agent_summaries(conn):
         LIMIT 500;
     """)
 
+@app.get("/admin/agents/stream")
+async def admin_agents_stream(x_admin_token: Optional[str] = Header(None)):
+    _require_admin(x_admin_token)
+
+    async def gen():
+        # Initial hello (so client knows we’re alive)
+        yield _sse({"ok": True, "ts": time.time()}, event="hello")
+
+        while True:
+            try:
+                async with pool.acquire() as c:
+                    items = await get_agent_summaries(c)  # your real query already added
+                    metrics_row = await c.fetchrow("""
+                      WITH agg AS (
+                        SELECT
+                          (SELECT COUNT(*) FROM users)        AS users,
+                          (SELECT COUNT(*) FROM companions)   AS companions,
+                          (SELECT COUNT(*) FROM reflections)  AS reflections,
+                          (SELECT COALESCE(SUM(gic_awarded),0) FROM reflections) AS gic
+                      )
+                      SELECT * FROM agg;
+                    """)
+                payload = {
+                    "ts": time.time(),
+                    "agents": items,
+                    "totals": {
+                        "users": int(metrics_row["users"]),
+                        "companions": int(metrics_row["companions"]),
+                        "reflections": int(metrics_row["reflections"]),
+                        "gic": int(metrics_row["gic"]),
+                    },
+                }
+                yield _sse(payload, event="snapshot")
+            except Exception as e:
+                # send error frame, wait, keep loop alive
+                yield _sse({"error": str(e), "ts": time.time()}, event="error")
+            # Adjust refresh cadence here (e.g., 10s)
+            await asyncio.sleep(10)
+
     out = []
     for r in rows:
         out.append({
