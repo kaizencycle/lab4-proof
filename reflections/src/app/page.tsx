@@ -16,10 +16,9 @@ export default function HomePage() {
       const res = await logReflection({ note, publish });
       setLastAward(res?.gic_awarded ?? res?.gic_delta ?? 0);
       setStatus('ok');
-    } catch (e: any) {
-      setStatus(e?.message || 'error');
-    }
-  }
+    } catch (e: any) 
+    {setStatus(e?.message || 'error');}
+    
   return (
     <main style={{ maxWidth: 720, margin: '40px auto', padding: 16 }}>
       <h1>Welcome to Agora</h1>
