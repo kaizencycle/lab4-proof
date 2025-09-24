@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import LogForm from '@/components/LogForm' 
 
 // Use RELATIVE imports so we don't depend on tsconfig path aliases
 import DemoBadge from '../components/DemoBadge';
