@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   title: 'Reflections — GIC Rewards',
   description: 'Log your thoughts; earn GIC; seal your day.',}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) 
+{
   return (
     <html lang="en">
       <body>
@@ -20,8 +21,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) 
+{
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -32,8 +33,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
-
-export default function RootLayout({{ children }: { children: React.ReactNode }) {
+export default function RootLayout({{ children }: { children: React.ReactNode }) 
+{
   children,
 }: {
   children: React.ReactNode
