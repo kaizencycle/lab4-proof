@@ -10,15 +10,12 @@ export default function Page() {
     try {
       setStatus("Submitting...");
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/reflect`,
-        {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/reflect`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ note, publish }),
-        }
-      );
-
+        });
+      
       if (!res.ok) {
         throw new Error(`API error: ${res.status}`);
       }
