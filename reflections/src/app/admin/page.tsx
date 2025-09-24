@@ -89,7 +89,7 @@ function MetricsBar({metrics, onRefresh}:{metrics:any, onRefresh:()=>void}) {
 }
 
 // inside AdminPage component
-useEffect(() => {
+useEffect((ok) => {
   if (!ok) return;
 
   // Build stream URL (proxy recommended for header tokens; see below)
