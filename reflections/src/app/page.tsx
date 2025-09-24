@@ -1,119 +1,54 @@
-'use client';
+```
+"use client";
 
-import { useState } from 'react';
-import LogForm from '@/components/LogForm';
-import { logReflection } from '@/lib/api';
+import { useState } from "react";
+import LogForm from "./components/LogForm";
 
-export default function HomePage() {
-  const [lastAward, setLastAward] = useState<number | null>(null);
+export default function Page() {
   const [status, setStatus] = useState<string | null>(null);
 
-  async function handleSubmit(note: string, publish: boolean) 
-  {
-    setStatus(null);
-    setLastAward(null);
+  async function handleSubmit(note: string, publish: boolean): Promise<void> {
     try {
-      const res = await logReflection({ note, publish });
-      setLastAward(res?.gic_awarded ?? res?.gic_delta ?? 0);
-      setStatus('ok');
-    } catch (e: any) 
-    {setStatus(e?.message || 'error');}
-    
+      setStatus("Submitting...");
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/reflect`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note, publish }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setStatus(`success — GIC Awarded: ${data.gic_awarded ?? 0}`);
+    } catch (err: any) {
+      console.error(err);
+      setStatus(`Error: ${err.message}`);
+    }
+  }
+
   return (
-    <main style={{ maxWidth: 720, margin: '40px auto', padding: 16 }}>
-      <h1>Welcome to Agora</h1>
+    <main style={{ maxWidth: 720, margin: "40px auto", padding: 16 }}>
+      <h1>Welcome to Agora!</h1>
       <LogForm onSubmit={handleSubmit} />
-      {status === 'ok' && (
-        <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: '#0e2a17', color: '#b9f6ca' }}>
-          Success — GIC Awarded: {lastAward ?? 0}
-        </div>
-      )}
-      {status && status !== 'ok' && (
-        <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: '#2a1111', color: '#ffdede' }}>
+      {status && (
+        <div
+          style={{
+            marginTop: 12,
+            padding: 10,
+            borderRadius: 6,
+            background: status.startsWith("success") ? "#0c2a17" : "#2a0c0c",
+            color: status.startsWith("success") ? "#00ffaa" : "#ff6a6a",
+          }}
+        >
           {status}
         </div>
       )}
-    </main>
-  );
-}
-  return (
-    <main style={{ minHeight: "100vh", background: "#0b0b0f", color: "#eaeaea" }}>
-      <div style={{ maxWidth: 680, margin: "40px auto", padding: 16 }}>
-        <h1 style={{ fontSize: 36, marginBottom: 8 }}>Reflections</h1>
-        <p style={{ opacity: 0.8, marginBottom: 24 }}>
-          Log your thoughts. Earn GIC. Seal your day. <span style={{ opacity: 0.6 }}>( {today} )</span>
-        </p>
-        
-        <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="How are you feeling today? What did you learn?"
-            rows={6}
-            style={{
-              width: "100%",
-              padding: 14,
-              borderRadius: 10,
-              background: "#12121a",
-              border: "1px solid #1f2030",
-              color: "inherit",
-              resize: "vertical",
-            }}
-          />
-
-          <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <input
-              type="checkbox"
-              checked={publish}
-              onChange={(e) => setPublish(e.target.checked)}
-            />
-            <span>Publish this entry (earn a bonus when public sharing is enabled)</span>
-          </label>
-
-          <button
-            type="submit"
-            disabled={busy || !text.trim()}
-            style={{
-              height: 48,
-              borderRadius: 10,
-              border: "none",
-              background: busy ? "#2a8f47" : "#36c56b",
-              color: "#0b0b0f",
-              fontWeight: 700,
-              cursor: busy ? "wait" : "pointer",
-            }}
-          >
-            {busy ? "Logging..." : "Log Reflection"}
-          </button>
-        </form>
-
-        <div style={{ marginTop: 20 }}>
-          {result?.error && (
-            <div style={{ padding: 12, borderRadius: 8, background: "#2a1120", border: "1px solid #5b1a2c" }}>
-              Error: {result.error}
-            </div>
-          )}
-
-          {result && !result.error && (
-            <div style={{ padding: 12, borderRadius: 8, background: "#11221a", border: "1px solid #1f3b2b" }}>
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                {result.status ?? "Logged"}
-              </div>
-              {result.message && <div style={{ opacity: 0.85 }}>{result.message}</div>}
-              <div style={{ marginTop: 8, opacity: 0.8 }}>
-                GIC Awarded: <b>{result.gic_awarded ?? 0}</b>{' '}
-                {typeof result.xp_total === "number" && (
-                  <> · Total XP: <b>{result.xp_total}</b></>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <p style={{ marginTop: 24, opacity: 0.6, fontSize: 13 }}>
-          API base: <code>{process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000"}</code>
-        </p>
-      </div>
     </main>
   );
 }
