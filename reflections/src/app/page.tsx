@@ -8,7 +8,8 @@ export default function HomePage() {
   const [lastAward, setLastAward] = useState<number | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
-  async function handleSubmit(note: string, publish: boolean) {
+  async function handleSubmit(note: string, publish: boolean) 
+  {
     setStatus(null);
     setLastAward(null);
     try {
@@ -19,12 +20,10 @@ export default function HomePage() {
       setStatus(e?.message || 'error');
     }
   }
-
   return (
     <main style={{ maxWidth: 720, margin: '40px auto', padding: 16 }}>
       <h1>Welcome to Agora</h1>
       <LogForm onSubmit={handleSubmit} />
-
       {status === 'ok' && (
         <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: '#0e2a17', color: '#b9f6ca' }}>
           Success — GIC Awarded: {lastAward ?? 0}
@@ -38,7 +37,6 @@ export default function HomePage() {
     </main>
   );
 }
-
   return (
     <main style={{ minHeight: "100vh", background: "#0b0b0f", color: "#eaeaea" }}>
       <div style={{ maxWidth: 680, margin: "40px auto", padding: 16 }}>
@@ -46,7 +44,7 @@ export default function HomePage() {
         <p style={{ opacity: 0.8, marginBottom: 24 }}>
           Log your thoughts. Earn GIC. Seal your day. <span style={{ opacity: 0.6 }}>( {today} )</span>
         </p>
-
+        
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
           <textarea
             value={text}
