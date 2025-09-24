@@ -1,3 +1,4 @@
+from fastapi.responses import StreamingResponse
 from __future__ import annotations
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -92,6 +93,9 @@ def append_jsonl(file_path: str, record: dict) -> str:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
     
     return sha256_json(record)
+
+def _sse(data: dict, event: str = "message") -> bytes:
+    # SSE frames: event:<name>\ndata:<json>\n\n
 
 def _humanize_seconds(s: int) -> str:
     if s <= 0: return "now"
@@ -790,6 +794,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
