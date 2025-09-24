@@ -1,6 +1,7 @@
 from __future__ import annotations
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Header, HTTPException
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
@@ -40,7 +41,10 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
-   
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")  # set in Render env
+def _require_admin(x_admin_token: Optional[str] = Header(None)):
+    if not ADMIN_TOKEN or x_admin_token != ADMIN_TOKEN:
+
 # ──────────────────────────────────────────────────────────────────────────────
 # GIC REWARDS CONFIG + HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
@@ -119,6 +123,27 @@ def _read_jsonl_file(p: Path) -> list[dict]:
                 # skip malformed lines, but keep verifying others
                 pass
     return rows
+
+async def get_agent_summaries(conn):
+    # If you already have companions/reflections tables, replace this with real SQL.
+    # Example real query (uncomment when ready):
+    # rows = await conn.fetch("""
+    #   SELECT c.id as companion_id, c.name, c.archetype,
+    #          u.id as user_id,
+    #          (SELECT COUNT(*) FROM reflections r WHERE r.companion_id=c.id) AS reflections,
+    #          (SELECT COALESCE(SUM(gic_awarded),0) FROM reflections r WHERE r.companion_id=c.id) AS gic,
+    #          NOW() - COALESCE((SELECT MAX(created_at) FROM reflections r WHERE r.companion_id=c.id), NOW()) AS since_last
+    #   FROM companions c JOIN users u ON u.id=c.user_id
+    #   ORDER BY since_last ASC
+    #   LIMIT 500
+    # """)
+    # return [dict(r) for r in rows]
+
+    # TEMP: mock a couple of agents so UI works now
+    return [
+        {"companion_id":"1111-aaaa","name":"Echo","archetype":"sage","user_id":"u-01","reflections":42,"gic":580,"since_last":"00:12:10"},
+        {"companion_id":"2222-bbbb","name":"Jade","archetype":"mentor","user_id":"u-02","reflections":18,"gic":230,"since_last":"03:01:55"},
+    ]
 
 # ──────────────────────────────────────────────────────────────────────────────
 # BONUS HELPERS
@@ -293,6 +318,15 @@ class Seal(BaseModel):
 # SANITY
 # ──────────────────────────────────────────────────────────────────────────────
 
+@app.get("/admin/metrics")
+async def admin_metrics(x_admin_token: Optional[str] = Header(None)):
+    _require_admin(x_admin_token)
+    # Replace with real SQL when ready
+    return {
+        "totals": {"users": 2, "companions": 2, "reflections": 60, "gic": 810},
+        "ts": time.time(),
+    }
+    
 @app.get("/health")
 async def health():
     return {"ok": True, "ts": datetime.utcnow().isoformat() + "Z"}
@@ -315,6 +349,12 @@ def routes():
 # WRITE ENDPOINTS
 # ──────────────────────────────────────────────────────────────────────────────
 
+@app.get("/admin/agents")
+async def admin_agents(x_admin_token: Optional[str] = Header(None)):
+    _require_admin(x_admin_token)
+    async with pool.acquire() as c:
+        items = await get_agent_summaries(c)
+        
 @app.post("/reflect")
 async def reflect(note: dict):
     return {"status": "success", "data": note}
@@ -741,6 +781,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
