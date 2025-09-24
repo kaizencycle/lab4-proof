@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import LogForm from "./components/LogForm";
+import LogForm from "../components/LogForm";
 
 export default function Page() {
   const [status, setStatus] = useState<string | null>(null);
