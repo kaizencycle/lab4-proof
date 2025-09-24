@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { logReflection } from '@/lib/api'  
 
 type Props = { onSubmit: (note: string, publish: boolean) => Promise<void> };
 
