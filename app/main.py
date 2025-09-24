@@ -51,7 +51,7 @@ def _require_admin(x_admin_token: Optional[str] = Header(None)):
 # ──────────────────────────────────────────────────────────────────────────────
 
 # DEMO TOGGLE
-DEMO_MODE = os.getenv("DEMO_MODE", "true")
+DEMO_MODE =("DEMO_MODE", "true")
 
 if DEMO_MODE:
     GIC_PER_PRIVATE = 1
@@ -794,6 +794,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
 
     }
+
 
 
 
