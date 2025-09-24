@@ -30,7 +30,7 @@ export default function AdminPage() {
       setMetrics(m);
       setAgents(a.agents);
       setOk(true);
-    } catch (e:any) {
+    } catch (e: any) {
       setErr(e.message || "Auth failed");
       setOk(false);
     }
@@ -40,6 +40,49 @@ export default function AdminPage() {
     const saved = sessionStorage.getItem("ADMIN_TOKEN");
     if (saved) setToken(saved);
   }, []);
+
+  // Fixed SSE useEffect
+  useEffect(() => {
+    if (!ok) return;
+
+    // Build stream URL (proxy recommended for header tokens; see below)
+    // Direct to API with token in query for simplicity:
+    const base = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/, "");
+    const url = `${base}/admin/agents/stream?token=${encodeURIComponent(token)}`;
+
+    const es = new EventSource(url);
+
+    es.addEventListener("hello", (e) => {
+      // optional: console.log("SSE hello", e.data);
+    });
+
+    es.addEventListener("snapshot", (e: MessageEvent) => {
+      try {
+        const { agents: a, totals } = JSON.parse(e.data);
+        setAgents(a);
+        setMetrics({ totals });
+      } catch {}
+    });
+
+    es.addEventListener("error", (e: MessageEvent) => {
+      // backend emits "error" event with JSON body
+      try {
+        const payload = JSON.parse(e.data);
+        setErr(payload.error || "stream error");
+      } catch {
+        setErr("stream error");
+      }
+    });
+
+    es.onerror = () => {
+      setErr("connection lost, retrying…");
+    };
+
+    // Cleanup function
+    return () => {
+      es.close();
+    };
+  }, [ok, token]);
 
   function onSetToken() {
     sessionStorage.setItem("ADMIN_TOKEN", token);
@@ -88,44 +131,6 @@ function MetricsBar({metrics, onRefresh}:{metrics:any, onRefresh:()=>void}) {
   );
 }
 
-// inside AdminPage component
-useEffect(ok)
-  if (ok);
-
-  // Build stream URL (proxy recommended for header tokens; see below)
-  // Direct to API with token in query for simplicity:
-  const base = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/+$/, "");
-  const url = `${base}/admin/agents/stream?token=${encodeURIComponent(token)}`;
-
-  const es = new EventSource(url);
-
-  es.addEventListener("hello", (e) => {
-    // optional: console.log("SSE hello", e.data);
-  });
-
-  es.addEventListener("snapshot", (e: MessageEvent) => {
-    try {
-      const { agents: a, totals } = JSON.parse(e.data);
-      setAgents(a);
-      setMetrics({ totals });
-    } catch {}
-  });
-
-  es.addEventListener("error", (e: MessageEvent) => {
-    // backend emits "error" event with JSON body
-    try {
-      const payload = JSON.parse(e.data);
-      setErr(payload.error || "stream error");
-    } catch {
-      setErr("stream error");
-    }
-  });
-
-  es.onerror = () => {
-    setErr("connection lost, retrying…");
-  };
-}, [ok, token]);
-
 function NodeGraph({agents}:{agents:Agent[]}) {
   const canvasRef = useRef<HTMLCanvasElement|null>(null);
   const nodes = useMemo(()=>{
@@ -138,11 +143,6 @@ function NodeGraph({agents}:{agents:Agent[]}) {
       y: 220 + R*Math.sin((i/n)*2*Math.PI),
     }));
   }, [agents]);
-
-  function onSetToken() {
-  sessionStorage.setItem("ADMIN_TOKEN", token);
-  setOk(true); // so the effect above starts SSE
-}
   
   useEffect(()=>{
     const ctx = canvasRef.current?.getContext("2d");
@@ -167,80 +167,4 @@ function NodeGraph({agents}:{agents:Agent[]}) {
       ctx.beginPath();
       ctx.arc(nd.x, nd.y, 10 + Math.min(nd.reflections,40)/12, 0, Math.PI*2);
       ctx.fillStyle = archeColor(nd.archetype);
-      ctx.fill();
-    });
-
-    // labels
-    ctx.fillStyle = "#cfe8ff";
-    ctx.font = "12px sans-serif";
-    nodes.forEach(nd=>{
-      ctx.fillText(`${nd.name}`, nd.x+12, nd.y-6);
-      ctx.fillText(`R:${nd.reflections} G:${nd.gic}`, nd.x+12, nd.y+10);
-    });
-  }, [nodes]);
-
-  return (
-    <div style={{margin:"12px 0", border:"1px solid #2a2a2a", borderRadius:10, padding:12}}>
-      <div style={{marginBottom:8, opacity:0.8}}>Live Nodes</div>
-      <canvas ref={canvasRef} width={440} height={440} style={{width:"100%", maxWidth:440}}/>
-      <Legend/>
-    </div>
-  );
-}
-
-function archeColor(a?:string){
-  switch((a||"").toLowerCase()){
-    case "sage": return "#8bd3ff";
-    case "mentor": return "#ffd37a";
-    case "explorer": return "#c2ff8b";
-    case "hero": return "#ff9a8b";
-    default: return "#c0b7f9";
-  }
-}
-
-function Legend(){
-  const items = [
-    ["Sage","#8bd3ff"],
-    ["Mentor","#ffd37a"],
-    ["Explorer","#c2ff8b"],
-    ["Hero","#ff9a8b"],
-  ];
-  return (
-    <div style={{display:"flex", gap:12, marginTop:8, flexWrap:"wrap"}}>
-      {items.map(([k,c])=>(
-        <div key={k} style={{display:"flex", alignItems:"center", gap:6, opacity:0.85}}>
-          <span style={{width:10, height:10, borderRadius:999, background:c as string}}/>
-          <span style={{fontSize:12}}>{k}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AgentTable({agents}:{agents:Agent[]}) {
-  return (
-    <div style={{marginTop:12, overflowX:"auto"}}>
-      <table style={{width:"100%", borderCollapse:"collapse"}}>
-        <thead>
-          <tr>
-            {["Companion","Archetype","User","Reflections","GIC","Last Seen"].map(h=>(
-              <th key={h} style={{textAlign:"left", padding:"8px 6px", borderBottom:"1px solid #2a2a2a"}}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {agents.map(a=>(
-            <tr key={a.companion_id}>
-              <td style={{padding:"8px 6px"}}>{a.name}</td>
-              <td style={{padding:"8px 6px"}}>{a.archetype||"—"}</td>
-              <td style={{padding:"8px 6px"}}>{a.user_id}</td>
-              <td style={{padding:"8px 6px"}}>{a.reflections}</td>
-              <td style={{padding:"8px 6px"}}>{a.gic}</td>
-              <td style={{padding:"8px 6px"}}>{a.since_last}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+      ctx.fill
