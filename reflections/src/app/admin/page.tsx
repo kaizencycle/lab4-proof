@@ -90,7 +90,7 @@ function MetricsBar({metrics, onRefresh}:{metrics:any, onRefresh:()=>void}) {
 
 // inside AdminPage component
 useEffect(ok)
-  if (!ok) return;
+  if (ok);
 
   // Build stream URL (proxy recommended for header tokens; see below)
   // Direct to API with token in query for simplicity:
@@ -124,8 +124,6 @@ useEffect(ok)
   es.onerror = () => {
     setErr("connection lost, retrying…");
   };
-
-  return () => es.close();
 }, [ok, token]);
 
 function NodeGraph({agents}:{agents:Agent[]}) {
