@@ -27,6 +27,14 @@ export default function RootLayout({ children }: { children: React.ReactNode })
     <html lang="en">
       <body className={inter.className}>
         <DemoBadge />
+        
+        <nav style={{ display: 'flex', gap: 12, padding: 12 }}>
+  <a href="/">Home</a>
+  <a href="/onboarding">Onboarding</a>
+  <a href="/login">Login</a>
+  <a href="/companion">Companion</a>
+</nav>
+        
         <StatusBar />   {/* add this line */}
         {children}
       </body>
