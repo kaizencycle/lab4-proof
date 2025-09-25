@@ -9,6 +9,15 @@ export async function getReflections() {
   return res.data;
 }
 
+export async function memoryAppend(events) {
+  const res = await api.post("/memory/append", { events });
+  return res.data;
+}
+export async function memorySummarize() {
+  const res = await api.post("/memory/summarize");
+  return res.data;
+}
+
 export async function postReflection(content) {
   const res = await axios.post(`${API_BASE}/reflections`, { content });
   return res.data;
