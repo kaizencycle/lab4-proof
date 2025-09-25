@@ -44,53 +44,6 @@ def verify_token(token: str) -> bool:
     expected = b64(hmac_sha256(secret_b, payload))
     return hmac.compare_digest(sig_b64, expected)
 
-@router.post("/introspect")
-def introspect(
-    authorization: str = Header(None)
-):
-    """
-    Introspect a token: tells if it's valid, who owns it, and when it expires.
-    Expects: Authorization: Bearer <token>
-    """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing bearer token")
-
-    token = authorization.split(" ", 1)[1].strip()
-
-    try:
-        app_id, exp, sig_b64 = parse_token(token)
-    except Exception:
-        return {"valid": False, "reason": "malformed"}
-
-    # expired?
-    now = int(time.time())
-    if now > exp:
-        return {
-            "valid": False,
-            "reason": "expired",
-            "app_id": app_id,
-            "exp_epoch": exp,
-        }
-
-    meta = APPS.get(app_id)
-    if not meta:
-        return {"valid": False, "reason": "unknown app_id", "app_id": app_id, "exp_epoch": exp}
-
-    secret_b = b64d(meta["secret"])
-    payload = f"{app_id}|{exp}".encode()
-    expected = b64(hmac_sha256(secret_b, payload))
-    if not hmac.compare_digest(sig_b64, expected):
-        return {"valid": False, "reason": "bad signature", "app_id": app_id, "exp_epoch": exp}
-
-    # success
-    return {
-        "valid": True,
-        "app_id": app_id,
-        "exp_epoch": exp,
-        "exp_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(exp)),
-        "expires_in_seconds": exp - now
-    }
-
 # -------- models --------
 class AdminContext:
     app_id: str
@@ -275,6 +228,53 @@ def issue_token(req: IssueToken):
     token, exp = make_token(req.app_id, secret_b, req.ttl or 3600)
     return {"token": token, "exp": exp}
 
+@router.post("/introspect")
+def introspect(
+    authorization: str = Header(None)
+):
+    """
+    Introspect a token: tells if it's valid, who owns it, and when it expires.
+    Expects: Authorization: Bearer <token>
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing bearer token")
+
+    token = authorization.split(" ", 1)[1].strip()
+
+    try:
+        app_id, exp, sig_b64 = parse_token(token)
+    except Exception:
+        return {"valid": False, "reason": "malformed"}
+
+    # expired?
+    now = int(time.time())
+    if now > exp:
+        return {
+            "valid": False,
+            "reason": "expired",
+            "app_id": app_id,
+            "exp_epoch": exp,
+        }
+
+    meta = APPS.get(app_id)
+    if not meta:
+        return {"valid": False, "reason": "unknown app_id", "app_id": app_id, "exp_epoch": exp}
+
+    secret_b = b64d(meta["secret"])
+    payload = f"{app_id}|{exp}".encode()
+    expected = b64(hmac_sha256(secret_b, payload))
+    if not hmac.compare_digest(sig_b64, expected):
+        return {"valid": False, "reason": "bad signature", "app_id": app_id, "exp_epoch": exp}
+
+    # success
+    return {
+        "valid": True,
+        "app_id": app_id,
+        "exp_epoch": exp,
+        "exp_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(exp)),
+        "expires_in_seconds": exp - now
+    }
+    
 @router.post("/introspect")
 def introspect(authorization: str = Header(None)):
     """
