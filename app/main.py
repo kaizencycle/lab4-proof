@@ -43,6 +43,7 @@ app.add_middleware(
 
 # ✅ Civic Auth router
 from app.auth import router as auth_router
+app.include_router(auth_router)
 
 app = FastAPI(title="HIVE API")
 
@@ -875,6 +876,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "preview": dry_dumps if req.dry else None,
         "file": str(payout_file),
     }
+
 
 
 
