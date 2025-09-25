@@ -25,6 +25,10 @@ export default function LoginPage() {
       const data = await res.json();
       const token = data.token;
 
+      <p style={{ marginTop: "1rem" }}>
+  New here? <a href="/register">Create an account</a>
+</p>
+
       // Store in localStorage (for simplicity here)
       localStorage.setItem("civic_token", token);
       localStorage.setItem("civic_id", civicId);
