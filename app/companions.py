@@ -59,6 +59,31 @@ class CompanionCreate(BaseModel):
 
 COMPANIONS = {}
 
+@router.post("/respond")
+async def companion_respond(ctx=Depends(admin_required)):
+    comp = COMPANIONS.get(ctx.app_id)
+    if not comp:
+        return {"ok": False, "response": "You don’t have a companion yet."}
+
+    name = comp["name"]
+    archetype = comp["archetype"]
+
+    archetype_prompts = {
+        "scout": "Encourage progress, be energetic, short and motivational.",
+        "sage": "Speak with wisdom, reference big ideas or metaphors.",
+        "healer": "Be gentle, empathetic, and comforting.",
+        "guardian": "Be protective, strong, and reassuring.",
+    }
+
+    prompt = f"""
+    You are {name}, a {archetype} companion.
+    Archetype style: {archetype_prompts.get(archetype, "neutral")}.
+    The user just shared a reflection. Reply in 1–3 sentences, in character.
+    """
+
+    reply = await llm_generate(prompt)
+    return {"ok": True, "response": reply}
+
 @router.post("/")
 def create_companion(body: CompanionCreate, ctx=Depends(admin_required)):
     COMPANIONS[ctx.app_id] = body.dict()
