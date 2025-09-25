@@ -1,14 +1,14 @@
-from fastapi.responses import StreamingResponse
 from __future__ import annotations
 from fastapi import FastAPI, HTTPException, Header
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Header, HTTPException
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple, Optional
 import os
 import json
 import re
+import time
 from dotenv import load_dotenv
 
 # Load environment variables (with error handling)
@@ -28,8 +28,6 @@ from app.models import BonusRun
 
 app = FastAPI(title="HIVE-PAW API (with ledger)", version="0.12.0")
 
-from fastapi.middleware.cors import CORSMiddleware
-
 ALLOWED_ORIGINS = [
     "https://lab4-proof.onrender.com",   # your Reflections frontend
     "http://localhost:3000",             # local dev
@@ -42,27 +40,28 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")  # set in Render env
+
 def _require_admin(x_admin_token: Optional[str] = Header(None)):
     if not ADMIN_TOKEN or x_admin_token != ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # GIC REWARDS CONFIG + HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
 
 # DEMO TOGGLE
-DEMO_MODE =("DEMO_MODE"="true")
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 
 if DEMO_MODE:
     GIC_PER_PRIVATE = 1
     GIC_PER_PUBLISH = 2
     REWARD_MIN_LEN  = 1
-
 else:    
-    GIC_PER_PRIVATE = ("GIC_PER_PRIVATE", "10")
-    GIC_PER_PUBLISH = ("GIC_PER_PUBLISH", "25")
-    
-    REWARD_MIN_LEN  = ("REWARD_MIN_LEN", "200")  
+    GIC_PER_PRIVATE = int(os.getenv("GIC_PER_PRIVATE", "10"))
+    GIC_PER_PUBLISH = int(os.getenv("GIC_PER_PUBLISH", "25"))
+    REWARD_MIN_LEN  = int(os.getenv("REWARD_MIN_LEN", "200"))
 
 # New "featured" submission marker (base reward same as publish now; weekly bonus later)
 FEATURE_INTENT = "publish_feature"   # new intent value
@@ -96,6 +95,13 @@ def append_jsonl(file_path: str, record: dict) -> str:
 
 def _sse(data: dict, event: str = "message") -> bytes:
     # SSE frames: event:<name>\ndata:<json>\n\n
+    lines = []
+    if event:
+        lines.append(f"event: {event}")
+    lines.append(f"data: {json.dumps(data)}")
+    lines.append("")
+    lines.append("")
+    return "\n".join(lines).encode("utf-8")
 
 def _humanize_seconds(s: int) -> str:
     if s <= 0: return "now"
@@ -105,6 +111,7 @@ def _humanize_seconds(s: int) -> str:
     if d:  return f"{d}d {h}h"
     if h:  return f"{h}h {m}m"
     if m:  return f"{m}m {sec}s"
+    return f"{sec}s"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # VERIFY HELPERS
@@ -339,6 +346,57 @@ async def admin_metrics(x_admin_token: Optional[str] = Header(None)):
         "totals": {"users": 2, "companions": 2, "reflections": 60, "gic": 810},
         "ts": time.time(),
     }
+
+@app.get("/admin/agents")
+async def admin_agents(x_admin_token: Optional[str] = Header(None)):
+    _require_admin(x_admin_token)
+    # For now, return mock data since pool is not defined
+    items = [
+        {"companion_id":"1111-aaaa","name":"Echo","archetype":"sage","user_id":"u-01","reflections":42,"gic":580,"since_last":"00:12:10"},
+        {"companion_id":"2222-bbbb","name":"Jade","archetype":"mentor","user_id":"u-02","reflections":18,"gic":230,"since_last":"03:01:55"},
+    ]
+    return {"agents": items}
+
+@app.get("/admin/agents/stream")
+async def admin_agents_stream(token: Optional[str] = None, x_admin_token: Optional[str] = Header(None)):
+    """SSE stream for real-time admin dashboard updates"""
+    # Check auth via token param or header
+    admin_token = token or x_admin_token
+    if not ADMIN_TOKEN or admin_token != ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    async def event_stream():
+        # Send hello
+        yield _sse({"message": "Connected to admin stream"}, "hello")
+        
+        # Send periodic snapshots (in real implementation, this would be event-driven)
+        while True:
+            try:
+                # Mock data for now
+                agents = [
+                    {"companion_id":"1111-aaaa","name":"Echo","archetype":"sage","user_id":"u-01","reflections":42,"gic":580,"since_last":"00:12:10"},
+                    {"companion_id":"2222-bbbb","name":"Jade","archetype":"mentor","user_id":"u-02","reflections":18,"gic":230,"since_last":"03:01:55"},
+                ]
+                totals = {"users": 2, "companions": 2, "reflections": 60, "gic": 810}
+                
+                yield _sse({"agents": agents, "totals": totals}, "snapshot")
+                
+                # Wait 30 seconds before next update
+                import asyncio
+                await asyncio.sleep(30)
+                
+            except Exception as e:
+                yield _sse({"error": str(e)}, "error")
+                break
+    
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
     
 @app.get("/health")
 async def health():
@@ -362,12 +420,6 @@ def routes():
 # WRITE ENDPOINTS
 # ──────────────────────────────────────────────────────────────────────────────
 
-@app.get("/admin/agents")
-async def admin_agents(x_admin_token: Optional[str] = Header(None)):
-    _require_admin(x_admin_token)
-    async with pool.acquire() as c:
-        items = await get_agent_summaries(c)
-        
 @app.post("/reflect")
 async def reflect(note: dict):
     return {"status": "success", "data": note}
@@ -792,27 +844,4 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "dry": req.dry,
         "preview": dry_dumps if req.dry else None,
         "file": str(payout_file),
-
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
