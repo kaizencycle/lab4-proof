@@ -167,4 +167,5 @@ function NodeGraph({agents}:{agents:Agent[]}) {
       ctx.beginPath();
       ctx.arc(nd.x, nd.y, 10 + Math.min(nd.reflections,40)/12, 0, Math.PI*2);
       ctx.fillStyle = archeColor(nd.archetype);
-      ctx.fill}
+      ctx.fill
+    }
