@@ -71,9 +71,9 @@ if DEMO_MODE:
     GIC_PER_PUBLISH = 2
     REWARD_MIN_LEN = 1
 else:    
-    GIC_PER_PRIVATE = int(os.getenv("GIC_PER_PRIVATE", "10"))
-    GIC_PER_PUBLISH = int(os.getenv("GIC_PER_PUBLISH", "25"))
-    REWARD_MIN_LEN = int(os.getenv("REWARD_MIN_LEN", "200"))
+    GIC_PER_PRIVATE = ("GIC_PER_PRIVATE", "10")
+    GIC_PER_PUBLISH = ("GIC_PER_PUBLISH", "25")
+    REWARD_MIN_LEN = ("REWARD_MIN_LEN", "200")
 
 # New "featured" submission marker
 FEATURE_INTENT = "publish_feature"
@@ -725,6 +725,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "preview": dry_dumps if req.dry else None,
         "file": str(payout_file),
     }
+
 
 
 
