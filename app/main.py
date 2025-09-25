@@ -41,6 +41,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ✅ Civic Auth router
+from app.auth import router as auth_router
+
+app = FastAPI(title="HIVE API")
+
+# Optional CORS (add your UI origin here)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://lab4-proof.onrender.com",
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(auth_router)
+
+# (Optional) include your existing routers when ready, e.g.:
+# from app.reflections import router as reflections_router
+# app.include_router(reflections_router)
+
+# Healthcheck (handy for Render)
+@app.get("/healthz")
+def healthz():
+
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")  # set in Render env
 
 def _require_admin(x_admin_token: Optional[str] = Header(None)):
@@ -845,4 +873,5 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "preview": dry_dumps if req.dry else None,
         "file": str(payout_file),
     }
+
 
