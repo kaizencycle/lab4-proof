@@ -1,6 +1,6 @@
-// src/UnlockPage.jsx
 import { useState } from "react";
 import { registerApp, issueToken, introspectToken } from "./api";
+import { importSecret, generateNonce, signMessage } from "./crypto";
 
 export default function UnlockPage({ onUnlock }) {
   const [loading, setLoading] = useState(false);
@@ -13,10 +13,12 @@ export default function UnlockPage({ onUnlock }) {
       const appId = "founder-console";
       const reg = await registerApp(appId);
 
-      // --- demo: fake nonce + HMAC signature ---
-      // In production, replace with real HMAC (like your PowerShell flow)
-      const nonce = btoa(Date.now().toString());
-      const signature = nonce; // demo shortcut
+      // Import secret returned from API
+      const secretKey = await importSecret(reg.secret);
+
+      // Nonce + signature
+      const nonce = generateNonce();
+      const signature = await signMessage(secretKey, nonce);
 
       setStatus("Requesting token…");
       const tok = await issueToken(appId, nonce, signature);
@@ -26,7 +28,7 @@ export default function UnlockPage({ onUnlock }) {
       const info = await introspectToken(tok.token);
 
       setStatus(`Unlocked as ${info.admin}, expires in ${info.expires_in_seconds}s`);
-      onUnlock(); // notify parent
+      onUnlock();
     } catch (err) {
       console.error(err);
       setStatus("Unlock failed.");
