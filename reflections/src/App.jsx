@@ -1,4 +1,9 @@
 import ReflectionsPage from "./ReflectionsPage";
+import ChatBox from "./ChatBox";
+// ... or route to it after unlock + companion setup
+export default function App() {
+  return <ChatBox />;
+}
 
 function App() {
   return <ReflectionsPage />;
