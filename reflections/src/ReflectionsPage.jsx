@@ -52,7 +52,42 @@ export default function ReflectionsPage() {
       setLoading(false);
     }
   }
+  
+import { memoryAppend, memorySummarize } from "./api";
 
+async function handleSubmit(e) {
+  e.preventDefault();
+  if (!text.trim()) return;
+  setLoading(true);
+  try {
+    // 1) Save reflection (your existing endpoint)
+    await postReflection(text);
+
+    // 2) Append to memory
+    await memoryAppend([{ type: "reflection", content: text }]);
+
+    // 3) (Optional) summarize every 10 reflections (quick heuristic)
+    // You could track a local count or just call and ignore errors:
+    // await memorySummarize();
+
+    setText("");
+    await refresh();
+
+    // 4) Ask companion to respond (will use memory)
+    const reply = await companionRespond();
+    if (reply.ok) {
+      setReflections((prev) => [
+        { content: reply.response, timestamp: new Date().toISOString(), companion: true },
+        ...prev,
+      ]);
+      // 5) Also append companion reply to memory
+      await memoryAppend([{ type: "reply", content: reply.response }]);
+    }
+  } finally {
+    setLoading(false);
+  }
+}
+  
   async function handleLogout() {
     await logoutSoft();
     window.location.reload();
