@@ -1,14 +1,22 @@
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000").replace(/\/+$/, "");
-
-export async function logReflection(data: { note: string; publish: boolean }) {
-  const res = await fetch(`${API_BASE}/reflect`, {
+export async function saveReflection(civicId: string, message: string, token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/memory/save`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ civic_id: civicId, message })
   });
-  if (!res.ok) {
-    const t = await res.text().catch(() => "");
-    throw new Error(`API ${res.status}: ${t || res.statusText}`);
-  }
+  return res.json();
+}
+
+export async function anchorReflection(civicId: string, message: string, token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_LEDGER_API}/ledger/attest`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      event_type: "reflection_appended",
+      civic_id: civicId,
+      lab_source: "lab4",
+      payload: { message }
+    })
+  });
   return res.json();
 }
