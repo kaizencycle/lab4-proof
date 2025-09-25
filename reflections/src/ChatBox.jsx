@@ -16,6 +16,18 @@ export default function ChatBox() {
     loadHistory();
   }, []);
 
+useEffect(() => {
+  const el = textareaRef.current;
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 6 * 24) + "px"; // 24px line height
+}, [text]);
+
+// replace textarea with ref
+const textareaRef = useRef(null);
+// ...
+<textarea ref={textareaRef} ... />
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
