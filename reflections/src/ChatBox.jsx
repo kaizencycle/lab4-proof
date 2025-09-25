@@ -1,318 +1,132 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  getReflections,
-  postReflection,
-  companionRespond,
-  memoryAppend,
-} from "./api";
+"use client";
 
-export default function ChatBox() {
-  const [messages, setMessages] = useState([]);
-  const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const bottomRef = useRef(null);
+import { useState, useEffect } from "react";
+import { saveReflection, anchorReflection } from "@/lib/api";
 
+type ChatBoxProps = {
+  civicId: string;
+  token: string;
+  companion?: string; // e.g. "jade" | "eve"
+};
+
+export default function ChatBox({ civicId, token, companion = "jade" }: ChatBoxProps) {
+  const [message, setMessage] = useState("");
+  const [ritualPrompt, setRitualPrompt] = useState<string | null>(null);
+  const [log, setLog] = useState<{ from: string; text: string }[]>([]);
+
+  // Companion rituals (morning / evening check-ins)
   useEffect(() => {
-    loadHistory();
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour < 12) {
+      setRitualPrompt("🌞 Good morning — what’s your intention today?");
+    } else if (hour >= 20) {
+      setRitualPrompt("🌙 Before rest — what were your 3 wins and 1 tomorrow focus?");
+    }
   }, []);
 
-useEffect(() => {
-  const el = textareaRef.current;
-  if (!el) return;
-  el.style.height = "auto";
-  el.style.height = Math.min(el.scrollHeight, 6 * 24) + "px"; // 24px line height
-}, [text]);
-
-// replace textarea with ref
-const textareaRef = useRef(null);
-// ...
-<textarea ref={textareaRef} ... />
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  async function loadHistory() {
-    const data = await getReflections();
-    setMessages(
-      (data || []).map((r) => ({
-        role: r.companion ? "companion" : "user",
-        content: r.content,
-        ts: r.timestamp,
-      }))
-    );
-  }
-
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!text.trim()) return;
-    setLoading(true);
+    if (!message.trim()) return;
 
-    // user reflection
-    const userMsg = { role: "user", content: text, ts: new Date().toISOString() };
-    setMessages((prev) => [...prev, userMsg]);
+    const userMsg = message.trim();
+    setLog((prev) => [...prev, { from: "You", text: userMsg }]);
+    setMessage("");
 
     try {
-      await postReflection(text);
-      await memoryAppend([{ type: "reflection", content: text }]);
-      setText("");
+      // Save into Lab4 memory
+      await saveReflection(civicId, userMsg, token);
 
-      // ask companion
-      const reply = await companionRespond();
-      if (reply.ok) {
-        const compMsg = {
-          role: "companion",
-          content: reply.response,
-          ts: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, compMsg]);
-        await memoryAppend([{ type: "reply", content: reply.response }]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
+      // Anchor into Ledger
+      await anchorReflection(civicId, userMsg, token);
 
-// src/ChatBox.jsx
-import { useState, useEffect, useRef } from "react";
-import {
-  getReflections,
-  postReflection,
-  companionRespond,
-  memoryAppend,
-} from "./api";
-import MemoryPanel from "./MemoryPanel";
+      // Companion auto-reply (simple placeholder now)
+      const reply = `${companion} reflects: “I’ve saved this to your memory and Ledger. Do you feel lighter after writing that?”`;
+      setLog((prev) => [...prev, { from: companion, text: reply }]);
 
-export default function ChatBox() {
-  const [messages, setMessages] = useState([]);
-  const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showMemory, setShowMemory] = useState(false);
-  const bottomRef = useRef(null);
-
-  useEffect(() => {
-    loadHistory();
-    const onKey = (e) => {
-      const isCmd = e.metaKey || e.ctrlKey;
-      if (isCmd && e.key.toLowerCase() === "b") {
-        e.preventDefault();
-        setShowMemory((v) => !v);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, showMemory]);
-
-  async function loadHistory() {
-    const data = await getReflections();
-    setMessages(
-      (data || []).map((r) => ({
-        role: r.companion ? "companion" : "user",
-        content: r.content,
-        ts: r.timestamp,
-      }))
-    );
-  }
-
-import { useState, useEffect, useRef } from "react";
-import SessionBadge from "./SessionBadge";
-// ... other imports unchanged
-
-export default function ChatBox() {
-  // ... state & effects unchanged
-
-  function handleKeyDown(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); // prevent newline
-      // trigger submit
-      const fakeEvent = { preventDefault() {} };
-      handleSubmit(fakeEvent);
+    } catch (err) {
+      console.error("Error saving reflection:", err);
+      setLog((prev) => [...prev, { from: companion, text: "⚠️ I couldn’t anchor that reflection. Try again." }]);
     }
   }
 
   return (
-    <div className="h-screen flex">
-      <SessionBadge />
-      {/* Chat column */}
-      <div className="flex-1 flex flex-col max-w-3xl mx-auto border-r">
-        <div className="p-3 border-b flex items-center justify-between">
-          <h1 className="font-semibold">🪞 Reflections</h1>
-          <button
-            onClick={() => setShowMemory((v) => !v)}
-            className="text-sm border rounded px-3 py-1 hover:bg-gray-50"
-          >
-            {showMemory ? "Hide Memory" : "Show Memory"}
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-white">
-          {/* ... messages as before ... */}
-          <div ref={bottomRef} />
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-3 border-t flex space-x-2 bg-white">
-          <textarea
-            className="flex-1 border rounded px-3 py-2 resize-none"
-            rows={2}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Write your reflection… (Enter to send, Shift+Enter for newline)"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-indigo-600 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {loading ? "…" : "Send"}
-          </button>
-        </form>
-      </div>
-
-      {showMemory && (
-        <div className="hidden md:block w-96">
-          <MemoryPanel onClose={() => setShowMemory(false)} />
-        </div>
-      )}
-    </div>
-  );
-}
-  
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!text.trim()) return;
-    setLoading(true);
-
-    const userMsg = { role: "user", content: text, ts: new Date().toISOString() };
-    setMessages((prev) => [...prev, userMsg]);
-
-    try {
-      await postReflection(text);
-      await memoryAppend([{ type: "reflection", content: text }]);
-      setText("");
-
-      const reply = await companionRespond();
-      if (reply.ok) {
-        const compMsg = {
-          role: "companion",
-          content: reply.response,
-          ts: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, compMsg]);
-        await memoryAppend([{ type: "reply", content: reply.response }]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="h-screen flex">
-      {/* Chat column */}
-      <div className="flex-1 flex flex-col max-w-3xl mx-auto border-r">
-        <div className="p-3 border-b flex items-center justify-between">
-          <h1 className="font-semibold">🪞 Reflections</h1>
-          <button
-            onClick={() => setShowMemory((v) => !v)}
-            className="text-sm border rounded px-3 py-1 hover:bg-gray-50"
-          >
-            {showMemory ? "Hide Memory" : "Show Memory"}
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-white">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`px-3 py-2 rounded-lg max-w-xs ${
-                  m.role === "user" ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-800"
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{m.content}</p>
-                <p className="text-[10px] opacity-70 mt-1">{m.role} • {m.ts}</p>
-              </div>
-            </div>
-          ))}
-          <div ref={bottomRef} />
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-3 border-t flex space-x-2 bg-white">
-          <input
-            className="flex-1 border rounded px-3 py-2"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Write your reflection…"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-indigo-600 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {loading ? "…" : "Send"}
-          </button>
-        </form>
-      </div>
-
-      {/* Memory side panel */}
-      {showMemory && (
-        <div className="hidden md:block w-96">
-          <MemoryPanel onClose={() => setShowMemory(false)} />
-        </div>
-      )}
-    </div>
-  );
-}
-  
-  return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto border rounded shadow">
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`flex ${
-              m.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`px-3 py-2 rounded-lg max-w-xs ${
-                m.role === "user"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-800"
-              }`}
-            >
-              <p>{m.content}</p>
-              <p className="text-xs opacity-70">{m.role}</p>
-            </div>
+    <div className="chatbox">
+      <div className="log">
+        {ritualPrompt && (
+          <div className="ritual">
+            <strong>{companion} asks:</strong> {ritualPrompt}
+          </div>
+        )}
+        {log.map((entry, i) => (
+          <div key={i} className={`msg ${entry.from === "You" ? "user" : "companion"}`}>
+            <strong>{entry.from}:</strong> {entry.text}
           </div>
         ))}
-        <div ref={bottomRef} />
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="p-3 border-t flex space-x-2 bg-white"
-      >
+      <form onSubmit={handleSubmit} className="chat-form">
         <input
-          className="flex-1 border rounded px-3 py-2"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Write your reflection…"
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Type your reflection…"
+          className="chat-input"
         />
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-indigo-600 text-white px-4 py-2 rounded disabled:opacity-50"
-        >
-          {loading ? "…" : "Send"}
-        </button>
+        <button type="submit" className="chat-send">Send</button>
       </form>
+
+      <style jsx>{`
+        .chatbox {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          padding: 1rem;
+        }
+        .log {
+          flex: 1;
+          overflow-y: auto;
+          margin-bottom: 1rem;
+        }
+        .msg {
+          margin: 0.5rem 0;
+        }
+        .msg.user {
+          text-align: right;
+          color: #333;
+        }
+        .msg.companion {
+          text-align: left;
+          color: #0066cc;
+        }
+        .ritual {
+          margin: 1rem 0;
+          font-style: italic;
+          color: #444;
+        }
+        .chat-form {
+          display: flex;
+          gap: 0.5rem;
+        }
+        .chat-input {
+          flex: 1;
+          padding: 0.5rem;
+          border: 1px solid #aaa;
+          border-radius: 4px;
+        }
+        .chat-send {
+          padding: 0.5rem 1rem;
+          background: #0066cc;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+      `}</style>
     </div>
   );
+}
+
 }
