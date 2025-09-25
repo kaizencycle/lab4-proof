@@ -141,3 +141,36 @@ export async function companionRespond() {
   const res = await api.post("/companions/respond");
   return res.data;
 }
+
+// Memory
+export async function memoryAppend(events) {
+  const res = await api.post("/memory/append", { events });
+  return res.data;
+}
+
+export async function memoryGet() {
+  const res = await api.get("/memory");
+  return res.data;
+}
+
+export async function memorySummarize() {
+  const res = await api.post("/memory/summarize");
+  return res.data;
+}
+
+// Companions
+export async function getCompanion() {
+  const res = await api.get("/companions");
+  return res.data;
+}
+
+export async function createCompanion(body) {
+  const res = await api.post("/companions", body);
+  return res.data;
+}
+
+export async function companionRespond() {
+  const res = await api.post("/companions/respond");
+  return res.data;
+}
+
