@@ -1,4 +1,6 @@
 # app/auth.py
+from dataclasses import dataclass
+@dataclass
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import base64, hmac, hashlib, os, time, typing as T
@@ -44,6 +46,10 @@ def verify_token(token: str) -> bool:
     return hmac.compare_digest(sig_b64, expected)
 
 # -------- models --------
+class AdminContext:
+    app_id: str
+    exp: int  # epoch seconds
+
 class RegisterApp(BaseModel):
     app_id: str
 
@@ -58,6 +64,71 @@ class RotateSecret(BaseModel):
     proof: str              # base64(HMAC(old_secret, "rotate"))
 
 # -------- endpoints --------
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends
+from app.auth import admin_required, AdminContext
+
+router = APIRouter(
+    prefix="/admin",
+    tags=["admin"],
+    dependencies=[Depends(admin_required)]
+)
+
+@router.get("/ping")
+def ping(ctx: AdminContext = Depends(admin_required)):
+    now = int(datetime.now(tz=timezone.utc).timestamp())
+    remaining_s = max(0, ctx.exp - now)
+    return {
+        "ok": True,
+        "admin": ctx.app_id,
+        "exp_epoch": ctx.exp,
+        "exp_iso": datetime.fromtimestamp(ctx.exp, tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+        "expires_in_seconds": remaining_s,
+        "message": f"Founder Console unlocked by {ctx.app_id}"
+    }
+    
+@router.post("/refresh")
+def refresh_token(
+    request: Request,
+    authorization: str = Header(None),
+    ttl: int | None = 3600
+):
+    """
+    Refresh a valid token (extends exp). Requires a valid current token in:
+      Authorization: Bearer <token>
+    Returns: { token, exp }
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing bearer token")
+
+    old_token = authorization.split(" ", 1)[1].strip()
+
+    # Validate the current token
+    try:
+        app_id, exp, _sig = parse_token(old_token)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Malformed token")
+
+    if time.time() > exp:
+        raise HTTPException(status_code=401, detail="Token expired")
+
+    meta = APPS.get(app_id)
+    if not meta:
+        raise HTTPException(status_code=401, detail="Unknown app_id")
+
+    secret_b = b64d(meta["secret"])
+
+    # Recompute expected signature and verify (defense-in-depth)
+    payload = f"{app_id}|{exp}".encode()
+    expected = b64(hmac_sha256(secret_b, payload))
+    _, _, sig_b64 = parse_token(old_token)
+    if not hmac.compare_digest(expected, sig_b64):
+        raise HTTPException(status_code=401, detail="Invalid token signature")
+
+    # Issue a new token with extended exp
+    new_token, new_exp = make_token(app_id, secret_b, ttl or 3600)
+    return {"token": new_token, "exp": new_exp}
+
 @router.post("/register_app")
 def register_app(req: RegisterApp):
     """Register an app and mint a base64 secret (dev/prod: keep in DB/secret store)."""
@@ -105,16 +176,17 @@ def rotate_secret(req: RotateSecret):
 def verify(token: str):
     return {"ok": bool(verify_token(token))}
 
+# app/auth.py (replace the existing admin_required)
 from fastapi import Depends, Header, Request
-import sys
+import sys, time
 
 def admin_required(
     request: Request,
     authorization: str = Header(None)
-) -> str:
+) -> AdminContext:
     """
     Dependency to secure admin routes.
-    Logs every attempt (success/fail).
+    Logs every attempt and returns (app_id, exp) context.
     Expects: Authorization: Bearer <token>
     """
     if not authorization or not authorization.startswith("Bearer "):
@@ -127,7 +199,6 @@ def admin_required(
         print(f"[ADMIN_AUTH][FAIL] Invalid/expired token for {request.url}", file=sys.stderr)
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    app_id, exp, sig = parse_token(token)
+    app_id, exp, _sig = parse_token(token)
     print(f"[ADMIN_AUTH][OK] app_id={app_id} exp={exp} url={request.url}", file=sys.stderr)
-    return app_id
-
+    return AdminContext(app_id=app_id, exp=exp)
