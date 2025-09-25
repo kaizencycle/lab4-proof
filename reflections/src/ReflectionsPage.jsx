@@ -1,21 +1,34 @@
 import { useEffect, useState } from "react";
-import { getReflections, postReflection, logoutSoft } from "./api";
+import {
+  getReflections,
+  postReflection,
+  logoutSoft,
+  getCompanion,
+  companionRespond,
+} from "./api";
 import useTokenRefresh from "./useTokenRefresh";
 
 export default function ReflectionsPage() {
   const [reflections, setReflections] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [companion, setCompanion] = useState(null);
 
-  useTokenRefresh(); // auto refresh every 2 minutes
+  useTokenRefresh();
 
   useEffect(() => {
     refresh();
+    loadCompanion();
   }, []);
 
   async function refresh() {
     const data = await getReflections();
     setReflections(data || []);
+  }
+
+  async function loadCompanion() {
+    const c = await getCompanion();
+    setCompanion(c);
   }
 
   async function handleSubmit(e) {
@@ -26,13 +39,22 @@ export default function ReflectionsPage() {
       await postReflection(text);
       setText("");
       await refresh();
+
+      // ask companion to respond
+      const reply = await companionRespond();
+      if (reply.ok) {
+        setReflections((prev) => [
+          { content: reply.response, timestamp: new Date().toISOString(), companion: true },
+          ...prev,
+        ]);
+      }
     } finally {
       setLoading(false);
     }
   }
 
   async function handleLogout() {
-    await logoutSoft(); // or logoutHard()
+    await logoutSoft();
     window.location.reload();
   }
 
@@ -40,6 +62,7 @@ export default function ReflectionsPage() {
     <div className="max-w-2xl mx-auto p-6 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">🪞 Reflections</h1>
+        {companion && <p className="text-sm text-gray-500">with {companion.name}</p>}
         <button
           onClick={handleLogout}
           className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
@@ -61,7 +84,7 @@ export default function ReflectionsPage() {
           disabled={loading}
           className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50"
         >
-          {loading ? "Submitting..." : "Submit"}
+          {loading ? "Submitting…" : "Submit"}
         </button>
       </form>
 
@@ -70,9 +93,16 @@ export default function ReflectionsPage() {
           <p className="text-gray-500 text-center">No reflections yet. Be the first ✨</p>
         ) : (
           reflections.map((r, i) => (
-            <div key={i} className="border rounded p-3 bg-gray-50">
+            <div
+              key={i}
+              className={`border rounded p-3 ${
+                r.companion ? "bg-yellow-50" : "bg-gray-50"
+              }`}
+            >
               <p>{r.content}</p>
-              <p className="text-xs text-gray-500 mt-1">at {r.timestamp}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {r.companion ? `${companion?.name} (companion)` : "You"} — {r.timestamp}
+              </p>
             </div>
           ))
         )}
