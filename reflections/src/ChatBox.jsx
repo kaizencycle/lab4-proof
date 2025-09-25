@@ -106,6 +106,70 @@ export default function ChatBox() {
     );
   }
 
+import { useState, useEffect, useRef } from "react";
+import SessionBadge from "./SessionBadge";
+// ... other imports unchanged
+
+export default function ChatBox() {
+  // ... state & effects unchanged
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // prevent newline
+      // trigger submit
+      const fakeEvent = { preventDefault() {} };
+      handleSubmit(fakeEvent);
+    }
+  }
+
+  return (
+    <div className="h-screen flex">
+      <SessionBadge />
+      {/* Chat column */}
+      <div className="flex-1 flex flex-col max-w-3xl mx-auto border-r">
+        <div className="p-3 border-b flex items-center justify-between">
+          <h1 className="font-semibold">🪞 Reflections</h1>
+          <button
+            onClick={() => setShowMemory((v) => !v)}
+            className="text-sm border rounded px-3 py-1 hover:bg-gray-50"
+          >
+            {showMemory ? "Hide Memory" : "Show Memory"}
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-white">
+          {/* ... messages as before ... */}
+          <div ref={bottomRef} />
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-3 border-t flex space-x-2 bg-white">
+          <textarea
+            className="flex-1 border rounded px-3 py-2 resize-none"
+            rows={2}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Write your reflection… (Enter to send, Shift+Enter for newline)"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-indigo-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {loading ? "…" : "Send"}
+          </button>
+        </form>
+      </div>
+
+      {showMemory && (
+        <div className="hidden md:block w-96">
+          <MemoryPanel onClose={() => setShowMemory(false)} />
+        </div>
+      )}
+    </div>
+  );
+}
+  
   async function handleSubmit(e) {
     e.preventDefault();
     if (!text.trim()) return;
