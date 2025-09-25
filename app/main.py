@@ -68,8 +68,10 @@ app.include_router(auth_router)
 # Healthcheck (handy for Render)
 @app.get("/healthz")
 def healthz():
+    return {"ok": True}
 
-ADMIN_TOKEN = ("ADMIN_TOKEN", "")  # set in Render env
+import os
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")  # set in Render env
 
 def _require_admin(x_admin_token: Optional[str] = Header(None)):
     if not ADMIN_TOKEN or x_admin_token != ADMIN_TOKEN:
@@ -873,6 +875,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "preview": dry_dumps if req.dry else None,
         "file": str(payout_file),
     }
+
 
 
 
