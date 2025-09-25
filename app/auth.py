@@ -1,6 +1,5 @@
 # app/auth.py
 from dataclasses import dataclass
-@dataclass
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import base64, hmac, hashlib, os, time, typing as T
@@ -45,6 +44,53 @@ def verify_token(token: str) -> bool:
     expected = b64(hmac_sha256(secret_b, payload))
     return hmac.compare_digest(sig_b64, expected)
 
+@router.post("/introspect")
+def introspect(
+    authorization: str = Header(None)
+):
+    """
+    Introspect a token: tells if it's valid, who owns it, and when it expires.
+    Expects: Authorization: Bearer <token>
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing bearer token")
+
+    token = authorization.split(" ", 1)[1].strip()
+
+    try:
+        app_id, exp, sig_b64 = parse_token(token)
+    except Exception:
+        return {"valid": False, "reason": "malformed"}
+
+    # expired?
+    now = int(time.time())
+    if now > exp:
+        return {
+            "valid": False,
+            "reason": "expired",
+            "app_id": app_id,
+            "exp_epoch": exp,
+        }
+
+    meta = APPS.get(app_id)
+    if not meta:
+        return {"valid": False, "reason": "unknown app_id", "app_id": app_id, "exp_epoch": exp}
+
+    secret_b = b64d(meta["secret"])
+    payload = f"{app_id}|{exp}".encode()
+    expected = b64(hmac_sha256(secret_b, payload))
+    if not hmac.compare_digest(sig_b64, expected):
+        return {"valid": False, "reason": "bad signature", "app_id": app_id, "exp_epoch": exp}
+
+    # success
+    return {
+        "valid": True,
+        "app_id": app_id,
+        "exp_epoch": exp,
+        "exp_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(exp)),
+        "expires_in_seconds": exp - now
+    }
+
 # -------- models --------
 class AdminContext:
     app_id: str
@@ -67,6 +113,49 @@ class RotateSecret(BaseModel):
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from app.auth import admin_required, AdminContext
+from fastapi import Header
+from app.auth import parse_token, verify_token, b64d, hmac_sha256, APPS
+import time
+
+@router.get("/status")
+def status(authorization: str = Header(None)):
+    """
+    Mirror /auth/introspect but live under /admin.
+    Lets the Founder Console check token validity & expiry
+    without touching /auth/* endpoints.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return {"ok": False, "reason": "missing bearer"}
+
+    token = authorization.split(" ", 1)[1].strip()
+
+    try:
+        app_id, exp, sig_b64 = parse_token(token)
+    except Exception:
+        return {"ok": False, "reason": "malformed"}
+
+    now = int(time.time())
+    if now > exp:
+        return {"ok": False, "reason": "expired"}
+
+    meta = APPS.get(app_id)
+    if not meta:
+        return {"ok": False, "reason": "unknown app_id"}
+
+    secret_b = b64d(meta["secret"])
+    payload = f"{app_id}|{exp}".encode()
+    expected = base64.b64encode(hmac_sha256(secret_b, payload)).decode()
+    if not hmac.compare_digest(sig_b64, expected):
+        return {"ok": False, "reason": "bad signature"}
+
+    exp_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(exp))
+    return {
+        "ok": True,
+        "admin": app_id,
+        "exp_epoch": exp,
+        "exp_iso": exp_iso,
+        "expires_in_seconds": max(0, exp - now)
+    }
 
 router = APIRouter(
     prefix="/admin",
@@ -86,6 +175,35 @@ def ping(ctx: AdminContext = Depends(admin_required)):
         "expires_in_seconds": remaining_s,
         "message": f"Founder Console unlocked by {ctx.app_id}"
     }
+
+@router.get("/sessions")
+def sessions(ctx: AdminContext = Depends(admin_required)):
+    """
+    List active sessions for the calling app_id.
+    Shows all tokens minted for this app_id,
+    and which ones are blacklisted (soft-logged out).
+    """
+    app_id = ctx.app_id
+    meta = APPS.get(app_id)
+    if not meta:
+        return {"ok": False, "reason": "unknown app_id"}
+
+    # Collect sessions for this app_id
+    sessions = []
+    now = int(time.time())
+
+    # In this simple setup, we don’t persist issued tokens.
+    # So instead, show current secret + blacklist info.
+    sessions.append({
+        "secret_prefix": meta["secret"][:6] + "...",
+        "tokens_blacklisted": [
+            t for t in TOKEN_BLACKLIST
+            if parse_token(t)[0] == app_id
+        ],
+        "tokens_active_note": "All tokens not in blacklist are considered active until expiry."
+    })
+
+    return {"ok": True, "app_id": app_id, "sessions": sessions}
     
 @router.post("/refresh")
 def refresh_token(
@@ -157,6 +275,122 @@ def issue_token(req: IssueToken):
     token, exp = make_token(req.app_id, secret_b, req.ttl or 3600)
     return {"token": token, "exp": exp}
 
+@router.post("/introspect")
+def introspect(authorization: str = Header(None)):
+    """
+    Introspect a token and return the same shape as /admin/ping so the UI can reuse one component.
+    Success shape:
+      { "ok": true,  "admin": <app_id>, "exp_epoch": <int>, "exp_iso": <ISO>, "expires_in_seconds": <int> }
+    Failure shape:
+      { "ok": false, "reason": "<malformed|expired|unknown app_id|bad signature>" }
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return {"ok": False, "reason": "missing bearer"}
+
+    token = authorization.split(" ", 1)[1].strip()
+
+    # decode
+    try:
+        app_id, exp, sig_b64 = parse_token(token)
+    except Exception:
+        return {"ok": False, "reason": "malformed"}
+
+    now = int(time.time())
+    if now > exp:
+        return {"ok": False, "reason": "expired"}
+
+    meta = APPS.get(app_id)
+    if not meta:
+        return {"ok": False, "reason": "unknown app_id"}
+
+    secret_b = b64d(meta["secret"])
+    payload = f"{app_id}|{exp}".encode()
+    expected = b64(hmac_sha256(secret_b, payload))
+    if not hmac.compare_digest(sig_b64, expected):
+        return {"ok": False, "reason": "bad signature"}
+
+    # success → mirror /admin/ping shape
+    exp_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(exp))
+    return {
+        "ok": True,
+        "admin": app_id,
+        "exp_epoch": exp,
+        "exp_iso": exp_iso,
+        "expires_in_seconds": max(0, exp - now),
+    }
+
+@router.post("/introspect")
+def introspect(authorization: str = Header(None)):
+    """
+    Introspect a token and return the same shape as /admin/ping.
+    Works for UI reuse: {ok, admin, exp_epoch, exp_iso, expires_in_seconds}
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return {"ok": False, "reason": "missing bearer"}
+
+    token = authorization.split(" ", 1)[1].strip()
+
+    try:
+        app_id, exp, sig_b64 = parse_token(token)
+    except Exception:
+        return {"ok": False, "reason": "malformed"}
+
+    now = int(time.time())
+    if now > exp:
+        return {"ok": False, "reason": "expired"}
+
+    meta = APPS.get(app_id)
+    if not meta:
+        return {"ok": False, "reason": "unknown app_id"}
+
+    secret_b = b64d(meta["secret"])
+    payload = f"{app_id}|{exp}".encode()
+    expected = b64(hmac_sha256(secret_b, payload))
+    if not hmac.compare_digest(sig_b64, expected):
+        return {"ok": False, "reason": "bad signature"}
+
+    # Success → match /admin/ping shape
+    exp_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(exp))
+    return {
+        "ok": True,
+        "admin": app_id,
+        "exp_epoch": exp,
+        "exp_iso": exp_iso,
+        "expires_in_seconds": max(0, exp - now)
+    }
+    
+@router.post("/logout")
+def logout(ctx: AdminContext = Depends(admin_required)):
+    """
+    Invalidate an app's session by removing its secret.
+    All previously issued tokens will stop working.
+    """
+    if ctx.app_id in APPS:
+        APPS.pop(ctx.app_id, None)
+        return {
+            "ok": True,
+            "message": f"App '{ctx.app_id}' logged out, all tokens invalidated."
+        }
+    return {"ok": False, "reason": "not registered"}
+
+from fastapi import Header
+
+# keep a blacklist of invalidated tokens (per app_id)
+TOKEN_BLACKLIST: set[str] = set()
+
+@router.post("/logout/soft")
+def soft_logout(authorization: str = Header(None)):
+    """
+    Soft logout: only invalidate this single token.
+    Other tokens for the same app_id remain valid.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return {"ok": False, "reason": "missing bearer token"}
+
+    token = authorization.split(" ", 1)[1].strip()
+    TOKEN_BLACKLIST.add(token)
+    return {"ok": True, "message": "This token has been invalidated (soft logout)."}
+
 @router.post("/rotate_secret")
 def rotate_secret(req: RotateSecret):
     """Rotate an app's secret using HMAC(old_secret, 'rotate') proof."""
@@ -175,6 +409,26 @@ def rotate_secret(req: RotateSecret):
 @router.post("/verify")
 def verify(token: str):
     return {"ok": bool(verify_token(token))}
+
+from app.admin import TOKEN_BLACKLIST  # import at the top of auth.py
+
+def verify_token(token: str) -> bool:
+    """Utility verifier (handy for your admin endpoints)."""
+    if token in TOKEN_BLACKLIST:
+        return False
+    try:
+        app_id, exp, sig_b64 = parse_token(token)
+    except Exception:
+        return False
+    if time.time() > exp:
+        return False
+    meta = APPS.get(app_id)
+    if not meta:
+        return False
+    secret_b = b64d(meta["secret"])
+    payload = f"{app_id}|{exp}".encode()
+    expected = b64(hmac_sha256(secret_b, payload))
+    return hmac.compare_digest(sig_b64, expected)
 
 # app/auth.py (replace the existing admin_required)
 from fastapi import Depends, Header, Request
