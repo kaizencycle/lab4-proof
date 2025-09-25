@@ -1,11 +1,13 @@
-// src/ReflectionsPage.jsx
 import { useEffect, useState } from "react";
-import { getReflections, postReflection } from "./api";
+import { getReflections, postReflection, logoutSoft } from "./api";
+import useTokenRefresh from "./useTokenRefresh";
 
 export default function ReflectionsPage() {
   const [reflections, setReflections] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useTokenRefresh(); // auto refresh every 2 minutes
 
   useEffect(() => {
     refresh();
@@ -29,9 +31,22 @@ export default function ReflectionsPage() {
     }
   }
 
+  async function handleLogout() {
+    await logoutSoft(); // or logoutHard()
+    window.location.reload();
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-bold text-center">🪞 Reflections</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">🪞 Reflections</h1>
+        <button
+          onClick={handleLogout}
+          className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+        >
+          Logout
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col space-y-2">
         <textarea
