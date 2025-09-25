@@ -122,3 +122,13 @@ export async function introspectToken(token) {
   });
   return res.data;
 }
+
+export async function getCompanion() {
+  const res = await api.get("/companions");
+  return res.data;
+}
+
+export async function companionRespond() {
+  const res = await api.post("/companions/respond");
+  return res.data;
+}
