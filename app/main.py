@@ -12,6 +12,11 @@ import time
 from dotenv import load_dotenv
 from app.memory import router as memory_router
 app.include_router(memory_router)
+from app.memory import router as memory_router
+from app.companions import router as companions_router
+
+app.include_router(memory_router)
+app.include_router(companions_router)
 
 # Load environment variables (with error handling)
 try:
@@ -880,6 +885,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "preview": dry_dumps if req.dry else None,
         "file": str(payout_file),
     }
+
 
 
 
