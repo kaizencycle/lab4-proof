@@ -104,3 +104,30 @@ def rotate_secret(req: RotateSecret):
 @router.post("/verify")
 def verify(token: str):
     return {"ok": bool(verify_token(token))}
+
+from fastapi import Depends, Header, Request
+import sys
+
+def admin_required(
+    request: Request,
+    authorization: str = Header(None)
+) -> str:
+    """
+    Dependency to secure admin routes.
+    Logs every attempt (success/fail).
+    Expects: Authorization: Bearer <token>
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        print(f"[ADMIN_AUTH][FAIL] Missing token for {request.url}", file=sys.stderr)
+        raise HTTPException(status_code=401, detail="Missing bearer token")
+
+    token = authorization.split(" ", 1)[1].strip()
+
+    if not verify_token(token):
+        print(f"[ADMIN_AUTH][FAIL] Invalid/expired token for {request.url}", file=sys.stderr)
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    app_id, exp, sig = parse_token(token)
+    print(f"[ADMIN_AUTH][OK] app_id={app_id} exp={exp} url={request.url}", file=sys.stderr)
+    return app_id
+
