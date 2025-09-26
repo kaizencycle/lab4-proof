@@ -15,7 +15,7 @@ import {
   memoryAppend,
   // memorySummarize, // optional
 } from '../lib/api';
-import useTokenRefresh from './useTokenRefresh';
+import useTokenRefresh from '../lib/useTokenRefresh';
 
 // --- Types (lightweight to keep TS happy) ---
 type Reflection = {
