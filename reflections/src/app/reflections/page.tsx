@@ -1,14 +1,13 @@
-// src/app/reflections/page.tsx
+'use client';
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import ChatBox from "../../components/ChatBox";
 import ReflectionsPage from "../../components/ReflectionsPage";
 
 export default function Page() {
   return <ReflectionsPage />;
 }
-
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import ChatBox from "../../components/ChatBox";
 
 export default function ReflectionsPage() {
   const router = useRouter();
