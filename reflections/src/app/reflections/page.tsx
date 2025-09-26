@@ -1,3 +1,10 @@
+// src/app/reflections/page.tsx
+import ReflectionsPage from "../../components/ReflectionsPage";
+
+export default function Page() {
+  return <ReflectionsPage />;
+}
+
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
