@@ -1,12 +1,60 @@
 import { useEffect, useState } from "react";
-import {
-  getReflections,
-  postReflection,
-  logoutSoft,
-  getCompanion,
-  companionRespond,
-} from "./api";
-import useTokenRefresh from "./useTokenRefresh";
+import { getReflections, postReflection, logoutSoft, getCompanion,companionRespond } 
+from "./api"; import useTokenRefresh from "./useTokenRefresh";
+
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import ChatBox from './ChatBox';
+
+export default function ReflectionsPage() {
+  const [messages, setMessages] = useState([
+    { role: 'system', content: 'Welcome to Reflections ✨ Your companion awaits.' }
+  ]);
+  const [input, setInput] = useState('');
+
+  // Handle sending a message
+  const handleSend = () => {
+    if (!input.trim()) return;
+
+    // Add user message
+    const newMessages = [...messages, { role: 'user', content: input }];
+    setMessages(newMessages);
+    setInput('');
+
+    // Stub for companion response
+    setTimeout(() => {
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: `Echo: "${input}"` }
+      ]);
+    }, 500);
+  };
+
+  return (
+    <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
+      <h1>Reflections</h1>
+      <p className="subtitle">
+        A space for conversations with your AI companion.
+      </p>
+
+      <ChatBox messages={messages} />
+
+      <div style={{ marginTop: '1rem', display: 'flex' }}>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Type your reflection..."
+          style={{ flex: 1, padding: '0.5rem' }}
+        />
+        <button onClick={handleSend} style={{ marginLeft: '0.5rem' }}>
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function ReflectionsPage() {
   const [reflections, setReflections] = useState([]);
