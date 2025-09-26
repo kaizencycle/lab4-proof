@@ -1,9 +1,8 @@
+'use client';
+
 import { useEffect, useState } from "react";
 import { getReflections, postReflection, logoutSoft, getCompanion,companionRespond } 
 from "./api"; import useTokenRefresh from "./useTokenRefresh";
-
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import ChatBox from './ChatBox';
 
