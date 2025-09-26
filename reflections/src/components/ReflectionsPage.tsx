@@ -5,6 +5,7 @@ import { getReflections, postReflection, logoutSoft, getCompanion,companionRespo
 from "./api"; import useTokenRefresh from "./useTokenRefresh";
 import React, { useState, useEffect } from 'react';
 import ChatBox from './ChatBox';
+import { memoryAppend, memorySummarize } from "../lib/api";
 
 export default function ReflectionsPage() {
   const [messages, setMessages] = useState([
@@ -99,8 +100,6 @@ export default function ReflectionsPage() {
       setLoading(false);
     }
   }
-  
-import { memoryAppend, memorySummarize } from "../lib/api";
 
 async function handleSubmit(e) {
   e.preventDefault();
