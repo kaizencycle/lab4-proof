@@ -100,7 +100,7 @@ export default function ReflectionsPage() {
     }
   }
   
-import { memoryAppend, memorySummarize } from "./api";
+import { memoryAppend, memorySummarize } from "../lib/api";
 
 async function handleSubmit(e) {
   e.preventDefault();
