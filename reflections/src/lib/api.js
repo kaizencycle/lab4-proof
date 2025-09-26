@@ -3,91 +3,13 @@ import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "https://hive-api-2le8.onrender.com";
 
-// simple wrapper
-export async function getReflections() {
-  const res = await axios.get(`${API_BASE}/reflections`);
-  return res.data;
-}
-
-export async function memoryAppend(events) {
-  const res = await api.post("/memory/append", { events });
-  return res.data;
-}
-export async function memorySummarize() {
-  const res = await api.post("/memory/summarize");
-  return res.data;
-}
-
-export async function postReflection(content) {
-  const res = await axios.post(`${API_BASE}/reflections`, { content });
-  return res.data;
-}
-
-import axios from "axios";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "https://hive-api-2le8.onrender.com";
-
+// Get token from localStorage
 function getToken() {
   return localStorage.getItem("admin_token");
 }
 
 export function clearToken() {
   localStorage.removeItem("admin_token");
-}
-
-const api = axios.create({ baseURL: API_BASE });
-api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-// --- reflections ---
-export async function getReflections() {
-  const res = await api.get("/reflections");
-  return res.data;
-}
-export async function postReflection(content) {
-  const res = await api.post("/reflections", { content });
-  return res.data;
-}
-
-// --- civic auth ---
-export async function refreshToken() {
-  const token = getToken();
-  if (!token) return null;
-  const res = await api.post("/auth/refresh", null, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  localStorage.setItem("admin_token", res.data.token);
-  return res.data;
-}
-
-export async function logoutHard() {
-  const token = getToken();
-  if (!token) return;
-  await api.post("/admin/logout", null, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  clearToken();
-}
-
-export async function logoutSoft() {
-  const token = getToken();
-  if (!token) return;
-  await api.post("/admin/logout/soft", null, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  clearToken();
-}
-
-import axios from "axios";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "https://hive-api-2le8.onrender.com";
-
-// Get token from localStorage
-function getToken() {
-  return localStorage.getItem("admin_token");
 }
 
 // Axios instance with optional auth
@@ -100,6 +22,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// --- Reflections ---
 export async function getReflections() {
   const res = await api.get("/reflections");
   return res.data;
@@ -132,8 +55,42 @@ export async function introspectToken(token) {
   return res.data;
 }
 
+export async function refreshToken() {
+  const token = getToken();
+  if (!token) return null;
+  const res = await api.post("/auth/refresh", null, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  localStorage.setItem("admin_token", res.data.token);
+  return res.data;
+}
+
+export async function logoutHard() {
+  const token = getToken();
+  if (!token) return;
+  await api.post("/admin/logout", null, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  clearToken();
+}
+
+export async function logoutSoft() {
+  const token = getToken();
+  if (!token) return;
+  await api.post("/admin/logout/soft", null, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  clearToken();
+}
+
+// --- Companions ---
 export async function getCompanion() {
   const res = await api.get("/companions");
+  return res.data;
+}
+
+export async function createCompanion(body) {
+  const res = await api.post("/companions", body);
   return res.data;
 }
 
@@ -142,7 +99,7 @@ export async function companionRespond() {
   return res.data;
 }
 
-// Memory
+// --- Memory ---
 export async function memoryAppend(events) {
   const res = await api.post("/memory/append", { events });
   return res.data;
@@ -158,18 +115,32 @@ export async function memorySummarize() {
   return res.data;
 }
 
-// Companions
-export async function getCompanion() {
-  const res = await api.get("/companions");
+// --- Lab4-specific functions for ChatBox compatibility ---
+export async function saveReflection(civicId, content, token) {
+  // Save reflection to your backend
+  const res = await axios.post(`${API_BASE}/reflections`, { 
+    content,
+    civic_id: civicId 
+  }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 }
 
-export async function createCompanion(body) {
-  const res = await api.post("/companions", body);
-  return res.data;
-}
-
-export async function companionRespond() {
-  const res = await api.post("/companions/respond");
-  return res.data;
+export async function anchorReflection(civicId, content, token) {
+  // Anchor to ledger (if you have ledger endpoint)
+  try {
+    const res = await axios.post(`${API_BASE}/ledger/attest`, {
+      event_type: "reflection",
+      civic_id: civicId,
+      lab_source: "lab4",
+      payload: { content, timestamp: new Date().toISOString() }
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  } catch (error) {
+    console.warn("Ledger anchoring failed:", error);
+    return { success: false, error: error.message };
+  }
 }
