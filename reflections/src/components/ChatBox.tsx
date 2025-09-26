@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { saveReflection, anchorReflection } from "@/lib/api";
+import { saveReflection, anchorReflection } from "../lib/api";
 
 type ChatBoxProps = {
   civicId: string;
@@ -34,6 +34,7 @@ export default function ChatBox({ civicId, token, companion = "jade" }: ChatBoxP
     setMessage("");
 
     try {
+      
       // Save into Lab4 memory
       await saveReflection(civicId, userMsg, token);
 
