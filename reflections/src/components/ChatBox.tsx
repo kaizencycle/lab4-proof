@@ -128,5 +128,3 @@ export default function ChatBox({ civicId, token, companion = "jade" }: ChatBoxP
     </div>
   );
 }
-
-}
