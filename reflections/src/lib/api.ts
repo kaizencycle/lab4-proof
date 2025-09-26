@@ -1,78 +1,110 @@
 // reflections/src/lib/api.ts
-import axios from 'axios';
+// Single source of truth for all front-end API calls (Lab4, Lab6, Ledger)
 
-const LAB4 = process.env.NEXT_PUBLIC_API_LAB4 || '';
-const LEDGER = process.env.NEXT_PUBLIC_API_LEDGER || '';
-const LAB6 = process.env.NEXT_PUBLIC_API_LAB6 || '';
+import axios, { AxiosRequestConfig } from 'axios';
 
-function authHeaders() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('civic_token') : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+/** ---------- Environment ---------- */
+const LAB4  = process.env.NEXT_PUBLIC_API_LAB4  || '';   // e.g. https://hive-api-2le8.onrender.com
+const LAB6  = process.env.NEXT_PUBLIC_API_LAB6  || '';   // e.g. https://lab6-proof-api.onrender.com
+const LEDGER = process.env.NEXT_PUBLIC_API_LEDGER || ''; // e.g. https://civic-protocol-core-ledger.onrender.com
+
+/** ---------- Auth helpers ---------- */
+function getToken(): string | null {
+  // Try civic session first; fall back to admin token if present
+  if (typeof window === 'undefined') return null;
+  return (
+    localStorage.getItem('civic_token') ||
+    localStorage.getItem('admin_token') ||
+    null
+  );
 }
 
-/** ------- Reflections (Lab4) ------- **/
+function authHeaders(extra?: Record<string, string>) {
+  const tok = getToken();
+  return {
+    ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+    ...(extra || {}),
+  };
+}
 
-// Return the latest reflections (shape: [{content, timestamp, companion?}, ...])
-export async function getReflections(): Promise<Array<{content: string; timestamp: string; companion?: boolean;}>> {
+/** Generic request with auth (optional) */
+async function withAuth<T = any>(cfg: AxiosRequestConfig): Promise<T> {
+  const headers = { ...(cfg.headers || {}), ...authHeaders() };
+  const { data } = await axios({ ...cfg, headers });
+  return data as T;
+}
+
+/** ---------- Types (lightweight) ---------- */
+export type ReflectionItem = {
+  content: string;
+  timestamp: string;
+  companion?: boolean;
+};
+
+export type Companion = { name: string };
+
+/** =========================================================================
+ *  Lab4 – Reflections & Companion
+ *  =======================================================================*/
+
+/** Get latest reflections */
+export async function getReflections(): Promise<ReflectionItem[]> {
   try {
-    // TODO: swap to your real endpoint once available
-    // const { data } = await axios.get(`${LAB4}/reflections`, { headers: authHeaders() });
-    // return data?.items ?? [];
-    return []; // stub so build doesn't fail if endpoint isn't ready
+    // TODO: replace stub with your real endpoint once available:
+    // const data = await withAuth<{ items: ReflectionItem[] }>({ url: `${LAB4}/reflections`, method: 'GET' });
+    // return data.items ?? [];
+    return []; // stub to keep builds green
   } catch {
     return [];
   }
 }
 
-export async function postReflection(text: string): Promise<{ ok: boolean }> {
+/** Save a reflection (alias: saveReflection for older components) */
+export async function postReflection(content: string): Promise<{ ok: boolean }> {
   try {
-    // TODO: swap to your real endpoint
-    // await axios.post(`${LAB4}/reflections`, { content: text }, { headers: { ...authHeaders(), 'Content-Type': 'application/json' } });
+    // await withAuth({ url: `${LAB4}/reflections`, method: 'POST', data: { content } });
     return { ok: true }; // stub
   } catch {
     return { ok: false };
   }
 }
+export const saveReflection = postReflection; // <- keep older imports working
 
+/** Soft logout */
 export async function logoutSoft(): Promise<void> {
   try {
-    // TODO: swap to your real endpoint if you have one
-    // await axios.post(`${LAB4}/auth/logout_soft`, {}, { headers: authHeaders() });
-  } catch {
-    /* ignore */
-  }
+    // await withAuth({ url: `${LAB4}/auth/logout_soft`, method: 'POST' });
+  } catch {/* ignore */}
 }
 
-export async function getCompanion(): Promise<{ name: string }> {
+/** Current companion */
+export async function getCompanion(): Promise<Companion> {
   try {
-    // TODO: swap to your real endpoint
-    // const { data } = await axios.get(`${LAB4}/companions/current`, { headers: authHeaders() });
+    // const data = await withAuth<Companion>({ url: `${LAB4}/companions/current`, method: 'GET' });
     // return data;
-    return { name: 'Jade' }; // stub
+    return { name: 'Companion' }; // stub
   } catch {
     return { name: 'Companion' };
   }
 }
 
+/** Ask companion to reply */
 export async function companionRespond(): Promise<{ ok: boolean; response: string }> {
   try {
-    // TODO: swap to your real endpoint
-    // const { data } = await axios.post(`${LAB4}/companions/respond`, {}, { headers: authHeaders() });
-    // return { ok: true, response: data?.reply ?? '' };
+    // const data = await withAuth<{ reply: string }>({ url: `${LAB4}/companions/respond`, method: 'POST' });
+    // return { ok: true, response: data.reply };
     return { ok: true, response: 'I hear you. What would you like to explore next?' }; // stub
   } catch {
     return { ok: false, response: '' };
   }
 }
 
-/** ------- Memory helpers (Lab4 or Ledger) ------- **/
-
+/** Memory ops */
 export async function memoryAppend(
   items: Array<{ type: 'reflection' | 'reply' | string; content: string }>
 ): Promise<{ ok: boolean }> {
   try {
-    // TODO: swap to your real endpoint
-    // await axios.post(`${LAB4}/memory/append`, { items }, { headers: { ...authHeaders(), 'Content-Type': 'application/json' } });
+    // await withAuth({ url: `${LAB4}/memory/append`, method: 'POST', data: { items } });
     return { ok: true }; // stub
   } catch {
     return { ok: false };
@@ -81,20 +113,46 @@ export async function memoryAppend(
 
 export async function memorySummarize(): Promise<{ ok: boolean }> {
   try {
-    // TODO: swap to your real endpoint
-    // await axios.post(`${LAB4}/memory/summarize`, {}, { headers: authHeaders() });
+    // await withAuth({ url: `${LAB4}/memory/summarize`, method: 'POST' });
     return { ok: true }; // stub
   } catch {
     return { ok: false };
   }
 }
 
-/** ------- (Optional) Ledger shortcuts ------- **/
-
-export async function attestToLedger(payload: any): Promise<{ ok: boolean }> {
+/** Token refresh used by useTokenRefresh hook */
+export async function refreshToken(): Promise<{ ok: boolean; token?: string }> {
   try {
-    // await axios.post(`${LEDGER}/ledger/attest`, payload, { headers: { ...authHeaders(), 'Content-Type': 'application/json' } });
+    // const data = await withAuth<{ token: string }>({ url: `${LAB4}/auth/refresh`, method: 'POST' });
+    // if (typeof window !== 'undefined') localStorage.setItem('civic_token', data.token);
     return { ok: true }; // stub
+  } catch {
+    return { ok: false };
+  }
+}
+
+/** =========================================================================
+ *  Ledger – anchoring / attest (and legacy alias)
+ *  =======================================================================*/
+
+/** Attest/anchor something to the ledger */
+export async function anchorReflection(payload: any): Promise<{ ok: boolean }> {
+  try {
+    // await withAuth({ url: `${LEDGER}/ledger/attest`, method: 'POST', data: payload });
+    return { ok: true }; // stub
+  } catch {
+    return { ok: false };
+  }
+}
+
+/** =========================================================================
+ *  Lab6 – (placeholder hooks for Citizen Shield)
+ *  =======================================================================*/
+
+export async function lab6Enroll(groupId: string): Promise<{ ok: boolean }> {
+  try {
+    // await withAuth({ url: `${LAB6}/enroll`, method: 'POST', data: { group_id: groupId } });
+    return { ok: true };
   } catch {
     return { ok: false };
   }
