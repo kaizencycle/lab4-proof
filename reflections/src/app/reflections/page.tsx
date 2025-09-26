@@ -1,9 +1,3 @@
-import ChatBox from "../../components/ChatBox";
-
-export default function ReflectionsPage() {
-  // In a real app, civicId + token would come from login/session
-  const civicId = "demo-user-001";
-  const token = "replace-with-auth-token";
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -17,6 +11,7 @@ export default function ReflectionsPage() {
   useEffect(() => {
     const id = localStorage.getItem("civic_id");
     const tok = localStorage.getItem("civic_token");
+    
     if (!id || !tok) {
       router.push("/login");
     } else {
@@ -25,16 +20,10 @@ export default function ReflectionsPage() {
     }
   }, [router]);
 
-  if (!civicId || !token) return <p>Loading…</p>;
+  if (!civicId || !token) {
+    return <p>Loading…</p>;
+  }
 
-  return (
-    <main style={{ maxWidth: "600px", margin: "0 auto", padding: "2rem" }}>
-      <h1>🪞 Reflections</h1>
-      <ChatBox civicId={civicId} token={token} companion="jade" />
-    </main>
-  );
-}
-  
   return (
     <main style={{ maxWidth: "600px", margin: "0 auto", padding: "2rem" }}>
       <h1>🪞 Reflections</h1>
