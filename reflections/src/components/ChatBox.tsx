@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { saveReflection, anchorReflection } from "../lib/api";
 
@@ -19,7 +18,7 @@ export default function ChatBox({ civicId, token, companion = "jade" }: ChatBoxP
     const now = new Date();
     const hour = now.getHours();
     if (hour < 12) {
-      setRitualPrompt("🌞 Good morning — what’s your intention today?");
+      setRitualPrompt("🌞 Good morning — what's your intention today?");
     } else if (hour >= 20) {
       setRitualPrompt("🌙 Before rest — what were your 3 wins and 1 tomorrow focus?");
     }
@@ -34,20 +33,23 @@ export default function ChatBox({ civicId, token, companion = "jade" }: ChatBoxP
     setMessage("");
 
     try {
-      
-      // Save into Lab4 memory
-      await saveReflection(civicId, userMsg, token);
+      // Save into Lab4 memory - only pass the content
+      await saveReflection(userMsg);
 
-      // Anchor into Ledger
-      await anchorReflection(civicId, userMsg, token);
+      // Anchor into Ledger - pass an object payload with all needed data
+      await anchorReflection({
+        civicId,
+        content: userMsg,
+        token,
+        timestamp: new Date().toISOString()
+      });
 
       // Companion auto-reply (simple placeholder now)
-      const reply = `${companion} reflects: “I’ve saved this to your memory and Ledger. Do you feel lighter after writing that?”`;
+      const reply = `${companion} reflects: "I've saved this to your memory and Ledger. Do you feel lighter after writing that?"`;
       setLog((prev) => [...prev, { from: companion, text: reply }]);
-
     } catch (err) {
       console.error("Error saving reflection:", err);
-      setLog((prev) => [...prev, { from: companion, text: "⚠️ I couldn’t anchor that reflection. Try again." }]);
+      setLog((prev) => [...prev, { from: companion, text: "⚠️ I couldn't anchor that reflection. Try again." }]);
     }
   }
 
@@ -65,7 +67,6 @@ export default function ChatBox({ civicId, token, companion = "jade" }: ChatBoxP
           </div>
         ))}
       </div>
-
       <form onSubmit={handleSubmit} className="chat-form">
         <input
           type="text"
@@ -76,7 +77,6 @@ export default function ChatBox({ civicId, token, companion = "jade" }: ChatBoxP
         />
         <button type="submit" className="chat-send">Send</button>
       </form>
-
       <style jsx>{`
         .chatbox {
           display: flex;
