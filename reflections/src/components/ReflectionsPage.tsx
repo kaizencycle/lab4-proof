@@ -2,10 +2,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import ChatBox from './ChatBox';
 
 // Adjust these import paths to match your repo layout.
-// From your screenshots, api helpers live in `src/lib/api` and the hook in `src/useTokenRefresh.js`.
 import {
   getReflections,
   postReflection,
@@ -34,11 +32,6 @@ export default function ReflectionsPage() {
   const [loading, setLoading] = useState(false);
   const [companion, setCompanion] = useState<Companion | null>(null);
 
-  // Optional inline chat box log (kept minimal)
-  const [messages, setMessages] = useState<{ role: 'system'|'user'|'assistant'; content: string }[]>([
-    { role: 'system', content: 'Welcome to Reflections ✨ Your companion awaits.' },
-  ]);
-
   useTokenRefresh();
 
   useEffect(() => {
@@ -62,46 +55,41 @@ export default function ReflectionsPage() {
 
     setLoading(true);
     try {
+      const userText = text.trim();
+      
       // 1) Save your reflection
-      await postReflection(text);
+      await postReflection(userText);
 
       // 2) Append to long-term memory
-      await memoryAppend([{ type: 'reflection', content: text }]);
+      await memoryAppend([{ type: 'reflection', content: userText }]);
+
+      // Add user's reflection to the display
+      setReflections(prev => [
+        { content: userText, timestamp: new Date().toISOString(), companion: false },
+        ...prev,
+      ]);
 
       setText('');
-      await refresh();
 
       // 3) Ask the companion to respond
       const reply = await companionRespond();
       if ((reply as any)?.ok) {
         const content = (reply as any).response as string;
 
-        // Show as a card in the list
+        // Show companion reply as a card in the list
         setReflections(prev => [
           { content, timestamp: new Date().toISOString(), companion: true },
           ...prev,
         ]);
 
-        // Also log in the inline chat UI
-        setMessages(prev => [
-          ...prev,
-          { role: 'user', content: text },
-          { role: 'assistant', content },
-        ]);
-
         // 4) Add the reply to memory
         await memoryAppend([{ type: 'reply', content }]);
-      } else {
-        // Fallback “echo” in case companionRespond returns non-ok
-        setMessages(prev => [
-          ...prev,
-          { role: 'user', content: text },
-          { role: 'assistant', content: `Echo: "${text}"` },
-        ]);
       }
 
       // (Optional) Summarize periodically
       // await memorySummarize();
+    } catch (error) {
+      console.error('Error submitting reflection:', error);
     } finally {
       setLoading(false);
     }
@@ -126,11 +114,6 @@ export default function ReflectionsPage() {
           Logout
         </button>
       </header>
-
-      {/* Inline conversation view (compact) */}
-      <section className="border rounded p-4 bg-white/50">
-        <ChatBox messages={messages} />
-      </section>
 
       {/* Submit a new reflection */}
       <form onSubmit={handleSubmit} className="flex flex-col space-y-2">
