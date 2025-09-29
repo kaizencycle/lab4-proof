@@ -2,9 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dark baseline */
-:root { color-scheme: dark; }
-html, body { @apply bg-black text-white; }
-button { @apply transition active:translate-y-[1px]; }
+/* Ensure full height for chat interface */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
 
-input, textarea, select { @apply bg-transparent text-white placeholder-zinc-500; }
+#__next {
+  height: 100%;
+}
+
+/* Optional: Hide the nav on reflections page for full immersion */
+body:has(.reflections-chat-container) nav {
+  display: none;
+}
+
+/* Smooth scrolling */
+* {
+  scroll-behavior: smooth;
+}
