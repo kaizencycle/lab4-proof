@@ -33,7 +33,7 @@ app = FastAPI(title="HIVE-PAW API (with ledger)", version="0.12.0")
 
 # CORS configuration
 ALLOWED_ORIGINS = [
-    "https://lab4-proof.onrender.com",   # your Reflections frontend
+    "https://reflections-app.onrender.com",   # your Reflections frontend
     "http://localhost:3000",             # local dev
     "http://localhost:5173",             # vite dev server
 ]
@@ -725,6 +725,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "preview": dry_dumps if req.dry else None,
         "file": str(payout_file),
     }
+
 
 
 
