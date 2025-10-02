@@ -1,6 +1,8 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { COMPANIONS } from "@/lib/companions";
+import { authedFetchJSON } from "@/lib/fetchers";
 
 export default function Consensus(){
   const [user, setUser] = useState("");
@@ -24,8 +26,8 @@ export default function Consensus(){
 
   async function deliberate(){
     const say = async (key:string) => {
-      const r = await fetch("/api/reflect", {
-        method:"POST", headers:{"Content-Type":"application/json"},
+      const r = await authedFetchJSON("/api/reflect", {
+        method:"POST",
         body: JSON.stringify({ user, text: `Consensus on: ${topic}`, companion: key })
       });
       const j = await r.json();

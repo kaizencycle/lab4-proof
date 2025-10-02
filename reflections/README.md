@@ -22,6 +22,8 @@ Mobile-friendly onboarding app with **companions** (Jade/Hermes/Eve/Zeus), a wor
 ## Notes
 - Sidebar collapses on mobile.  
 - XP rule (MVP): `min(50, max(5, floor(chars/10)))`. Tune later.
+- Dynamic pages: `/companion`, `/forest`, `/consensus` use `"use client"` and `export const dynamic = "force-dynamic"` to avoid Next.js prerender errors on Render.
+- Auth: API calls go through `authedFetchJSON()` which always sends the session cookie and (optionally) an `Authorization: Bearer <token>` if `localStorage.bearer_token` exists. Your iron-session login protects routes; Bearer is available for future API endpoints that require it.
 - Companion unlock costs 10 GIC by default.
 - Uses localStorage for MVP companion unlocks (server-side persistence coming later).
 

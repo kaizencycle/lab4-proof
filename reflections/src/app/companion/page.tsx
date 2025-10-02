@@ -1,9 +1,11 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import { COMPANIONS } from "@/lib/companions";
 import ChamberDrawer from "@/components/ChamberDrawer";
 import CompanionStore from "@/components/CompanionStore";
 import { useRouter } from "next/navigation";
+import { authedFetchJSON } from "@/lib/fetchers";
 
 export default function CompanionPage() {
   const [user, setUser] = useState("");
@@ -18,10 +20,9 @@ export default function CompanionPage() {
 
   async function loadBalance(handle: string) {
     if (!process.env.NEXT_PUBLIC_GIC_INDEXER_URL || !handle) return;
-    try {
-      const r = await fetch(`${process.env.NEXT_PUBLIC_GIC_INDEXER_URL}/balances/${handle}`, { cache: "no-store" });
-      if (r.ok) setBalance(await r.json());
-    } catch {}
+    const r = await fetch(`${process.env.NEXT_PUBLIC_GIC_INDEXER_URL}/balances/${handle}`, { cache: "no-store" })
+      .catch(()=>null);
+    if (r?.ok) setBalance(await r.json());
   }
   async function loadForest(handle: string) {
     if (!process.env.NEXT_PUBLIC_GIC_INDEXER_URL || !handle) return;
@@ -81,7 +82,8 @@ export default function CompanionPage() {
     setMessages(m => [...m, { role: "user", content: text }]);
     const body = { user, text, companion };
     setText("");
-    const r = await fetch("/api/reflect", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    // Use authed fetch so session cookie and optional Bearer are sent
+    const r = await authedFetchJSON("/api/reflect", { method: "POST", body: JSON.stringify(body) });
     const data = await r.json();
     if (data.reply) setMessages(m => [...m, { role: "assistant", content: `${COMPANIONS[companion].icon} ${data.reply}\n\n(+${data.xpGranted} XP)` }]);
     if (data.error) setMessages(m => [...m, { role: "assistant", content: `⚠️ ${data.error}` }]);

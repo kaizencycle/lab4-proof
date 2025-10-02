@@ -1,6 +1,8 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { authedFetchJSON } from "@/lib/fetchers";
 
 export default function Forest(){
   const [handle, setHandle] = useState("");
@@ -45,9 +47,8 @@ export default function Forest(){
     const amount = Number(amt);
     if (!amount || amount <= 0) return;
     setBusy(true);
-    const r = await fetch("/api/stake/trees", {
+    const r = await authedFetchJSON("/api/stake/trees", {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
       body: JSON.stringify({ user: handle, amount })
     });
     setBusy(false);
