@@ -1,15 +1,16 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
-import { COMPANIONS } from "@/lib/companions";
 import ChamberDrawer from "@/components/ChamberDrawer";
 import CompanionStore from "@/components/CompanionStore";
 import { useRouter } from "next/navigation";
 import { authedFetchJSON } from "@/lib/fetchers";
+import { ensureDefaultCompanion, loadUserCompanions, type UserCompanion } from "@/lib/customCompanions";
 
 export default function CompanionPage() {
   const [user, setUser] = useState("");
-  const [companion, setCompanion] = useState<keyof typeof COMPANIONS>("jade");
+  const [companion, setCompanion] = useState<string>("");
+  const [myComps, setMyComps] = useState<UserCompanion[]>([]);
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [balance, setBalance] = useState<any>(null);
@@ -50,6 +51,18 @@ export default function CompanionPage() {
     } catch {}
   }
   useEffect(() => { if (user) { loadBalance(user); loadForest(user); loadForestMonth(user); } }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    const list = ensureDefaultCompanion(user);
+    setMyComps(list);
+    if (!companion && list.length) setCompanion(list[0].id);
+  }, [user]);
+  function refreshCompanions(){
+    if (!user) return;
+    const list = loadUserCompanions(user);
+    setMyComps(list);
+    if (!list.find(c=>c.id===companion) && list[0]) setCompanion(list[0].id);
+  }
 
   // fetch handle from session (server sets cookie)
   useEffect(() => {
@@ -80,12 +93,16 @@ export default function CompanionPage() {
   async function send() {
     if (!text.trim()) return;
     setMessages(m => [...m, { role: "user", content: text }]);
-    const body = { user, text, companion };
+    // For now send a generic companion key; UI uses user-named companions.
+    const body = { user, text, companion: "general" };
     setText("");
     // Use authed fetch so session cookie and optional Bearer are sent
     const r = await authedFetchJSON("/api/reflect", { method: "POST", body: JSON.stringify(body) });
     const data = await r.json();
-    if (data.reply) setMessages(m => [...m, { role: "assistant", content: `${COMPANIONS[companion].icon} ${data.reply}\n\n(+${data.xpGranted} XP)` }]);
+    if (data.reply) {
+      const label = myComps.find(c=>c.id===companion)?.name ?? "Companion";
+      setMessages(m => [...m, { role: "assistant", content: `🤖 ${label}: ${data.reply}\n\n(+${data.xpGranted} XP)` }]);
+    }
     if (data.error) setMessages(m => [...m, { role: "assistant", content: `⚠️ ${data.error}` }]);
     loadBalance(user);
   }
@@ -110,18 +127,16 @@ export default function CompanionPage() {
   return (
     <div className="grid-shell">
       {/* Single-chamber drawer */}
-      <ChamberDrawer title={`Reflections: ${COMPANIONS[companion].name}`}>
+      <ChamberDrawer title={`Reflections: ${myComps.find(c=>c.id===companion)?.name ?? "Companion"}`}>
         <div className="stack">
-          {Object.entries(COMPANIONS)
-            .filter(([k]) => unlocked.includes(k))
-            .map(([k, c]) => (
+          {myComps.map(c => (
             <button
-              key={k}
-              onClick={() => setCompanion(k as any)}
-              className={companion === k ? "btn sel wfull" : "btn wfull"}
-              aria-pressed={companion === k}
+              key={c.id}
+              onClick={() => setCompanion(c.id)}
+              className={companion === c.id ? "btn sel wfull" : "btn wfull"}
+              aria-pressed={companion === c.id}
             >
-              <span className="mr">{c.icon}</span>
+              <span className="mr">🤖</span>
               {c.name}
             </button>
           ))}
@@ -129,7 +144,7 @@ export default function CompanionPage() {
           <CompanionStore
             handle={user}
             balance={balance?.total_gic ?? 0}
-            onUnlocked={(k) => setUnlocked(u => Array.from(new Set([...u, k])))}
+            onUnlocked={() => refreshCompanions()}
             cost={10}
           />
         </div>
@@ -138,8 +153,8 @@ export default function CompanionPage() {
       <main className="chat">
         <div className="chat-head">
           <div className="comp-title">
-            <span className="mr">{COMPANIONS[companion].icon}</span>
-            <strong>{COMPANIONS[companion].name}</strong>
+            <span className="mr">🤖</span>
+            <strong>{myComps.find(c=>c.id===companion)?.name ?? "Companion"}</strong>
           </div>
           <div className="user">
             <input value={user} readOnly className="readonly" />

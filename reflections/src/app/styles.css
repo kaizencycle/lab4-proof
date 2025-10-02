@@ -65,3 +65,51 @@ body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Aria
 .bubble.mine{background:#172a3a;border-color:#1f4a6a;margin-left:auto}
 .composer{display:flex;gap:10px}
 .composer textarea{flex:1;background:#0f1116;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px}
+
+/* Layout shell with sidebar */
+.shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+@media(max-width:900px){.shell{grid-template-columns:1fr}}
+.topbar{position:fixed;right:12px;top:10px;z-index:15;display:flex;gap:8px;align-items:center}
+.topbar .grow{flex:1}
+
+/* Sidebar */
+.sb-toggle{
+  position:fixed;left:10px;top:10px;z-index:20;
+  background:#131722;border:1px solid var(--border);color:#d8e0f0;
+  width:36px;height:36px;border-radius:8px;cursor:pointer;
+  display:none;
+}
+@media(max-width:900px){.sb-toggle{display:block}}
+.sb{
+  position:sticky;top:0;height:100vh;padding:16px 12px 10px;
+  background:#0b0f16;border-right:1px solid var(--border);
+}
+@media(max-width:900px){
+  .sb{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .2s ease;z-index:18;width:260px}
+  .sb.open{transform:none}
+}
+.sb-head{display:flex;align-items:center;gap:8px;padding:6px 8px 12px}
+.sb-head .logo{font-size:18px}
+.sb-nav{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.sb-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid transparent;color:#dbe7ff;text-decoration:none;background:transparent}
+.sb-link:hover{background:#0f1320;border-color:#1d2638}
+.sb-link.active{background:#141a2a;border-color:#29324a;box-shadow:0 0 0 1px #29324a inset}
+.sb-foot{position:absolute;bottom:12px;left:12px;color:var(--muted)}
+.ic{width:18px;text-align:center}
+
+/* Sidebar status widget */
+.sb-status{
+  position:absolute;left:12px;right:12px;bottom:44px;
+  border:1px solid var(--border);border-radius:10px;padding:10px;
+  background:#0e1420;
+}
+.sb-status .row{display:flex;align-items:center;gap:8px;margin:4px 0}
+.sb-status .mini{width:18px;text-align:center;opacity:.9}
+.sb-status .mono{font-variant-numeric:tabular-nums}
+.sb-status .tag{
+  display:inline-block;border:1px solid #2a384f;border-radius:999px;padding:2px 8px;
+  text-decoration:none;color:#cfe4ff;background:#101a2a;
+}
+.btn.tiny{padding:6px 8px;font-size:12px;margin-top:6px;width:100%;text-align:center}
+.prog{height:6px;border:1px solid var(--border);border-radius:999px;margin:8px 0;background:#0b0f16}
+.prog .bar{height:100%;border-radius:999px;background:#2a7fff}
