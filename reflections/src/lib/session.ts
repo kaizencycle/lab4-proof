@@ -1,9 +1,8 @@
-import { getIronSession } from "iron-session";
-import { IronSessionOptions } from "iron-session";
+import { getIronSession, SessionOptions } from "iron-session";
 
 export type UserSession = { handle?: string };
 
-export const sessionOptions: IronSessionOptions = {
+export const sessionOptions: SessionOptions = {
   password: process.env.SESSION_PASSWORD!,
   cookieName: "agora_session",
   cookieOptions: {
