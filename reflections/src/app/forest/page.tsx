@@ -1,9 +1,7 @@
-import dynamic from "next/dynamic";
+"use client";
+export const dynamic = "force-dynamic";
 
-const ForestClient = dynamic(() => import("./ForestClient"), {
-  ssr: false,
-  loading: () => <div>Loading Forest...</div>
-});
+import ForestClient from "./ForestClient";
 
 export default function Forest() {
   return <ForestClient />;
