@@ -1,12 +1,18 @@
 "use client";
-import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const [handle, setHandle] = useState("");
   const [loading, setLoading] = useState(false);
-  const next = useSearchParams().get("next") || "/companion";
+  const [next, setNext] = useState("/companion");
   const router = useRouter();
+
+  // Initialize from URL params after component mounts
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setNext(params.get("next") || "/companion");
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

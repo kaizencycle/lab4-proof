@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = 'force-dynamic';
 
 // POST /api/stake/trees { user, amount }
 export async function POST(req: NextRequest) {

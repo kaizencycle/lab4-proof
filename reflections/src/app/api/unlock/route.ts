@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = 'force-dynamic';
 
 // POST /api/unlock  { user, companion, costGIC }
 export async function POST(req: NextRequest) {

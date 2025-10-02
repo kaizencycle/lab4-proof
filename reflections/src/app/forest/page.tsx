@@ -10,13 +10,20 @@ export default function Forest(){
   const base = process.env.NEXT_PUBLIC_GIC_INDEXER_URL!;
   const params = useSearchParams();
   const router = useRouter();
-  const initialMode = (params.get("mode") === "quarter" ? "quarter" : "month") as "month"|"quarter";
-  const initialYM = params.get("period") || isoMonth(new Date());
-  const [mode, setMode] = useState<"month"|"quarter">(initialMode);
-  const [period, setPeriod] = useState<string>(initialYM); // YYYY-MM
-  const [range, setRange] = useState<{since:string, until:string}>(() =>
-    initialMode==="month" ? monthRange(fromIsoMonth(initialYM)) : quarterRange(fromIsoMonth(initialYM))
-  );
+  const [mode, setMode] = useState<"month"|"quarter">("month");
+  const [period, setPeriod] = useState<string>(() => isoMonth(new Date())); // YYYY-MM
+  const [range, setRange] = useState<{since:string, until:string}>(() => monthRange(new Date()));
+
+  // Initialize from URL params after component mounts
+  useEffect(() => {
+    if (params) {
+      const urlMode = params.get("mode") === "quarter" ? "quarter" : "month";
+      const urlPeriod = params.get("period") || isoMonth(new Date());
+      setMode(urlMode);
+      setPeriod(urlPeriod);
+      setRange(urlMode === "month" ? monthRange(fromIsoMonth(urlPeriod)) : quarterRange(fromIsoMonth(urlPeriod)));
+    }
+  }, [params]);
 
   useEffect(() => {
     (async () => {

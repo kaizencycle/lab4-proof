@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCompanion } from "@/lib/companions";
 
 export const runtime = "nodejs";
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
