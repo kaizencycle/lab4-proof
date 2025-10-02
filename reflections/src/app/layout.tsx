@@ -15,6 +15,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/onboarding">Onboarding</Link>
               <Link href="/login">Login</Link>
               <Link href="/companion">Companion</Link>
+              <Link href="/forest">Forest</Link>
             </div>
             <Logout />
           </nav>

@@ -11,6 +11,8 @@ export default function CompanionPage() {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [balance, setBalance] = useState<any>(null);
+  const [forest, setForest] = useState<any>({ trees: 0, staked_gic: 0 });
+  const [forestMonth, setForestMonth] = useState<{trees:number, ym:string} | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const router = useRouter();
 
@@ -21,7 +23,32 @@ export default function CompanionPage() {
       if (r.ok) setBalance(await r.json());
     } catch {}
   }
-  useEffect(() => { if (user) loadBalance(user); }, [user]);
+  async function loadForest(handle: string) {
+    if (!process.env.NEXT_PUBLIC_GIC_INDEXER_URL || !handle) return;
+    try {
+      const r = await fetch(`${process.env.NEXT_PUBLIC_GIC_INDEXER_URL}/forest/user/${handle}`, { cache: "no-store" });
+      if (r.ok) {
+        const data = await r.json();
+        setForest({ trees: data.trees || 0, staked_gic: data.staked_gic || 0 });
+      }
+    } catch {}
+  }
+  async function loadForestMonth(handle: string){
+    if (!process.env.NEXT_PUBLIC_GIC_INDEXER_URL || !handle) return;
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+    const since = new Date(now.getFullYear(), now.getMonth(), 1, 0,0,0).toISOString();
+    const until = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59).toISOString();
+    try {
+      const qs = `?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}`;
+      const r = await fetch(`${process.env.NEXT_PUBLIC_GIC_INDEXER_URL}/forest/user/${handle}${qs}`, { cache: "no-store" });
+      if (r.ok) {
+        const j = await r.json();
+        setForestMonth({ trees: j.trees || 0, ym });
+      }
+    } catch {}
+  }
+  useEffect(() => { if (user) { loadBalance(user); loadForest(user); loadForestMonth(user); } }, [user]);
 
   // fetch handle from session (server sets cookie)
   useEffect(() => {
@@ -32,6 +59,22 @@ export default function CompanionPage() {
       setLoadingUser(false);
     })();
   }, []);
+
+  // Live updates via SSE
+  useEffect(() => {
+    if (!user) return;
+    const es = new EventSource(`/api/stream?handle=${encodeURIComponent(user)}`);
+    es.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === "state") {
+          if (msg.balance) setBalance(msg.balance);
+          if (msg.forest) setForest({ trees: msg.forest.trees || 0, staked_gic: msg.forest.staked_gic || 0 });
+        }
+      } catch {}
+    };
+    return () => es.close();
+  }, [user]);
 
   async function send() {
     if (!text.trim()) return;
@@ -45,14 +88,21 @@ export default function CompanionPage() {
     loadBalance(user);
   }
 
-  // read unlocked set for handle (so UI only shows usable companions)
+  // server-truth unlocks
   const [unlocked, setUnlocked] = useState<string[]>(["jade"]);
   useEffect(() => {
-    if (!user) return;
-    try {
-      const raw = localStorage.getItem(`unlocked:${user}`);
-      setUnlocked(raw ? JSON.parse(raw) : ["jade"]);
-    } catch {}
+    if (!user || !process.env.NEXT_PUBLIC_GIC_INDEXER_URL) return;
+    (async () => {
+      try {
+        const u = await fetch(`${process.env.NEXT_PUBLIC_GIC_INDEXER_URL}/unlocks/${user}`, { cache: "no-store" });
+        if (u.ok) {
+          const j = await u.json();
+          const list = Array.isArray(j.unlocked) ? j.unlocked : ["jade"];
+          setUnlocked(list);
+          if (!list.includes(companion)) setCompanion(list[0] as any);
+        }
+      } catch {}
+    })();
   }, [user]);
 
   return (
@@ -92,6 +142,18 @@ export default function CompanionPage() {
           <div className="user">
             <input value={user} readOnly className="readonly" />
             {balance && <span className="badge">GIC {balance.total_gic.toFixed(3)}</span>}
+            {forestMonth && (
+              <a
+                className="badge"
+                href={`/forest?mode=month&period=${encodeURIComponent(forestMonth.ym)}`}
+                title={`This month: ~${forestMonth.trees.toFixed(1)} trees`}
+              >
+                🌳 {forestMonth.trees.toFixed(1)} (mo)
+              </a>
+            )}
+            {balance?.total_gic >= 100 && (
+              <a className="btn" href="/consensus" style={{marginLeft:8}}>Enter Consensus</a>
+            )}
           </div>
         </div>
 

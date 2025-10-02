@@ -13,16 +13,20 @@ const STORAGE_KEY = (h: string) => `unlocked:${h}`;
 
 export default function CompanionStore({ handle, balance, onUnlocked, cost = 10 }: Props) {
   const [unlocked, setUnlocked] = useState<string[]>([]);
-  // read unlocked list from localStorage (MVP persistence)
+  // server-truth unlocks from GIC Indexer
   useEffect(() => {
-    if (!handle) return;
-    const raw = localStorage.getItem(STORAGE_KEY(handle));
-    setUnlocked(raw ? JSON.parse(raw) : ["jade"]); // Jade is default unlocked
+    if (!handle || !process.env.NEXT_PUBLIC_GIC_INDEXER_URL) return;
+    (async () => {
+      try {
+        const u = await fetch(`${process.env.NEXT_PUBLIC_GIC_INDEXER_URL}/unlocks/${handle}`, { cache: "no-store" });
+        if (u.ok) {
+          const j = await u.json();
+          const list = Array.isArray(j.unlocked) ? j.unlocked : ["jade"];
+          setUnlocked(list);
+        }
+      } catch {}
+    })();
   }, [handle]);
-  useEffect(() => {
-    if (!handle || !unlocked) return;
-    localStorage.setItem(STORAGE_KEY(handle), JSON.stringify(unlocked));
-  }, [handle, unlocked]);
 
   const available = useMemo(() => Object.keys(COMPANIONS).filter(k => !unlocked.includes(k)), [unlocked]);
   const canBuy = balance >= cost;
@@ -38,7 +42,17 @@ export default function CompanionStore({ handle, balance, onUnlocked, cost = 10 
       const err = await r.json().catch(()=>({error:"unlock failed"}));
       return alert(`⚠️ ${err.error || "Unlock failed"}`);
     }
-    setUnlocked(list => [...list, key]);
+    // Refresh server-truth unlocks
+    if (process.env.NEXT_PUBLIC_GIC_INDEXER_URL) {
+      try {
+        const u = await fetch(`${process.env.NEXT_PUBLIC_GIC_INDEXER_URL}/unlocks/${handle}`, { cache: "no-store" });
+        if (u.ok) {
+          const j = await u.json();
+          const list = Array.isArray(j.unlocked) ? j.unlocked : ["jade"];
+          setUnlocked(list);
+        }
+      } catch {}
+    }
     onUnlocked?.(key);
     alert(`🎉 Unlocked ${COMPANIONS[key as keyof typeof COMPANIONS].name}!`);
   }
