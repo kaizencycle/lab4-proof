@@ -1,104 +1,35 @@
-# Reflections - GIC Rewards App
+# Lab4 — Reflections (Onboarding)
 
-A Next.js frontend for the HIVE-PAW API with GIC reward system.
+Mobile-friendly onboarding app with **companions** (Jade/Hermes/Eve/Zeus), a working **chat**, and **XP→GIC** via the GIC Indexer.
 
-## Features
+## Quickstart
+1) Copy `.env.example` → `.env.local` and fill values.  
+2) `npm i` then `npm run dev` (Next.js).  
+3) Type a reflection → you get a reply and **XP** is posted to the **GIC Indexer**.
 
-- **Private Reflections**: +10 GIC (default)
-- **Published Reflections**: +25 GIC (200+ characters)
-- **Chamber Selection**: Reflections, Lab4, Market, CommandLedger, Agora
-- **Daily Workflow**: Seed → Sweep → Seal
-- **GIC Tracking**: Real-time XP display
-- **Ledger Verification**: View daily integrity and GIC totals
-- **Dark Theme**: Modern, mobile-first design
+## Endpoints (server)
+- `POST /api/reflect` → { user, text, companion } → { reply, xpGranted }
+- `POST /api/unlock` → { user, companion, costGIC } → burns GIC for companion unlock
+- `POST /api/auth/login` → { handle } → creates session
+- `GET /api/me` → returns current user handle
 
-## Setup
+## Env
+- `OPENAI_API_KEY` for LLM (uses `gpt-4o-mini` by default)
+- `GIC_INDEXER_URL`, `GIC_INDEXER_KEY` to award XP on each reflection
+- `NEXT_PUBLIC_GIC_INDEXER_URL` used by client to show live balances
+- `SESSION_PASSWORD` for iron-session (32+ char secret)
 
-### Prerequisites
+## Notes
+- Sidebar collapses on mobile.  
+- XP rule (MVP): `min(50, max(5, floor(chars/10)))`. Tune later.
+- Companion unlock costs 10 GIC by default.
+- Uses localStorage for MVP companion unlocks (server-side persistence coming later).
 
-1. **Node.js** (v18 or later)
-2. **npm** or **yarn**
+### Auth
+This app uses a simple **passwordless handle login** with `iron-session`.  
+Protected routes: `/companion/**`.  
+Set `SESSION_PASSWORD` to a strong 32+ char secret.
 
-### Installation
-
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Create environment file**:
-   ```bash
-   # Copy the example and edit
-   cp .env.example .env.local
-   ```
-
-3. **Configure API connection**:
-   Edit `.env.local`:
-   ```
-   NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8000
-   NEXT_PUBLIC_API_KEY=YOUR_LONG_RANDOM_KEY
-   ```
-
-4. **Start development server**:
-   ```bash
-   npm run dev
-   ```
-
-5. **Open in browser**:
-   ```
-   http://localhost:3000
-   ```
-
-## API Integration
-
-The app connects to your HIVE-PAW API running on port 8000. Make sure your API server is running:
-
-```bash
-# In lab4-proof directory
-uvicorn app.main:app --reload --port 8000
-```
-
-## Usage
-
-1. **Seed your day**: Set your daily intent and goals
-2. **Log reflections**: Choose private (+10 GIC) or publish (+25 GIC)
-3. **Select chamber**: Pick your reflection context
-4. **Seal the day**: Complete your daily cycle
-5. **Track GIC**: View earned rewards and daily totals
-
-## Deployment
-
-When ready to deploy:
-
-1. **Deploy API to Render** (or your preferred platform)
-2. **Update environment variables**:
-   ```
-   NEXT_PUBLIC_BACKEND_URL=https://your-api.onrender.com
-   NEXT_PUBLIC_API_KEY=YOUR_PRODUCTION_KEY
-   ```
-3. **Deploy frontend** to Vercel, Netlify, or your preferred platform
-
-## Development
-
-- **TypeScript**: Full type safety
-- **Tailwind CSS**: Utility-first styling
-- **Axios**: HTTP client for API calls
-- **Day.js**: Date manipulation
-- **Zod**: Runtime validation (ready for use)
-
-## File Structure
-
-```
-reflections/
-├── src/
-│   ├── app/
-│   │   ├── globals.css
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   └── lib/
-│       └── api.ts
-├── package.json
-├── tailwind.config.js
-├── tsconfig.json
-└── README.md
-```
+### GIC-Gated unlocks
+The drawer shows an **Unlock new companion** card.  
+Threshold default: **10 GIC** (tweak in `Unlocker`).

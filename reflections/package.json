@@ -13,7 +13,8 @@
     "next": "14.2.5",  
     "react": "18.3.1",  
     "react-dom": "18.3.1",  
-    "dayjs": "1.11.13"  
+    "dayjs": "1.11.13",
+    "iron-session": "^8.0.0"
   },
   "devDependencies": {
     "typescript": "5.4.5",
