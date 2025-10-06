@@ -1,4 +1,4 @@
-# PowerShell version of redaction scan for Windows compatibility
+# Simple PowerShell redaction scan
 param(
     [string]$Root = (git rev-parse --show-toplevel 2>$null)
 )
@@ -11,19 +11,36 @@ if (-not (Test-Path $ForbiddenFile)) {
     exit 0
 }
 
+# Read forbidden patterns
 $ForbiddenLines = Get-Content $ForbiddenFile
-$Forbidden = $ForbiddenLines -join "|"
+$Forbidden = ""
+foreach ($line in $ForbiddenLines) {
+    if ($line -notmatch '^\s*$' -and $line -notmatch '^\s*#') {
+        if ($Forbidden) { 
+            $Forbidden = $Forbidden + "|" 
+        }
+        $Forbidden = $Forbidden + $line
+    }
+}
 
-$AllowLines = @()
+# Read allow patterns
+$Allow = ""
 if (Test-Path $AllowFile) {
     $AllowLines = Get-Content $AllowFile
+    foreach ($line in $AllowLines) {
+        if ($line -notmatch '^\s*$' -and $line -notmatch '^\s*#') {
+            if ($Allow) { 
+                $Allow = $Allow + "|" 
+            }
+            $Allow = $Allow + $line
+        }
+    }
 }
-$Allow = $AllowLines -join "|"
 
-Write-Host "🔎 Redaction scan (repo-aware)…"
+Write-Host "Redaction scan (repo-aware)…"
 $Failed = 0
 
-# Get tracked files, excluding vendor and private docs
+# Get tracked files
 $Files = git ls-files | Where-Object { $_ -notmatch '^(vendor/|docs/private/)' }
 
 foreach ($f in $Files) {
@@ -56,12 +73,12 @@ foreach ($f in $Files) {
             # Filter out allowed matches
             $netHits = $forbiddenHits | Where-Object { $_ -notin $allowHits }
             if ($netHits.Count -gt 0) {
-                Write-Host "🚫 $f"
+                Write-Host "Forbidden terms found in: $f"
                 $netHits | ForEach-Object { Write-Host $_ }
                 $Failed = 1
             }
         } else {
-            Write-Host "🚫 $f"
+            Write-Host "Forbidden terms found in: $f"
             $forbiddenHits | ForEach-Object { Write-Host $_ }
             $Failed = 1
         }
@@ -69,8 +86,8 @@ foreach ($f in $Files) {
 }
 
 if ($Failed -eq 1) {
-    Write-Host "❌ Forbidden terms detected. Redact or move to private."
+    Write-Host "Forbidden terms detected. Redact or move to private."
     exit 1
 }
 
-Write-Host "✅ No forbidden terms found."
+Write-Host "No forbidden terms found."
