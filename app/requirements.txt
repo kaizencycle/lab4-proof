@@ -4,4 +4,5 @@ httpx>=0.24.0
 pydantic>=2.0.0
 python-multipart
 python-dotenv
+openai>=1.0.0
 # ... your other dependencies
