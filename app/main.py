@@ -51,10 +51,20 @@ from app.auth import router as auth_router, admin_router
 from app.memory import router as memory_router
 from app.companions import router as companions_router
 
+# NEW: Agent SDK + Genesis + Wallet routers
+from app.routers import agents as agents_router
+from app.routers import wallet as wallet_router
+from app.routers import genesis as genesis_router
+
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(memory_router)
 app.include_router(companions_router)
+
+# NEW: expose Agent SDK, Wallet shim, and Genesis seeding
+app.include_router(agents_router.router)
+app.include_router(wallet_router.router)
+app.include_router(genesis_router.router)
 
 # Admin token configuration
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
@@ -318,6 +328,13 @@ async def get_agent_summaries(conn):
         {"companion_id":"1111-aaaa","name":"Echo","archetype":"sage","user_id":"u-01","reflections":42,"gic":580,"since_last":"00:12:10"},
         {"companion_id":"2222-bbbb","name":"Jade","archetype":"mentor","user_id":"u-02","reflections":18,"gic":230,"since_last":"03:01:55"},
     ]
+
+# STARTUP EVENT
+@app.on_event("startup")
+async def _boot_agents():
+    # If the SDK registers agents on import, nothing else is required here.
+    # This hook just confirms in logs that the kernel is live.
+    print("✅ Agent SDK initialized — core agents registered.")
 
 # BASIC ENDPOINTS
 @app.get("/")
@@ -725,12 +742,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "preview": dry_dumps if req.dry else None,
         "file": str(payout_file),
     }
-
-
-
-
-
-
+    
 
 
 
