@@ -1,13 +1,15 @@
+# app/agent_sdk/register.py
 from typing import List, Dict, Callable, Any
-from pydantic import BaseModel
-from app.agent_sdk import get_agent
+from pydantic import BaseModel, ConfigDict
 
 class Tool(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
     fn: Callable[..., Any]
     description: str
 
 class CoreAgent(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
     persona: str
     voice_id: str
@@ -27,10 +29,5 @@ def get(name: str) -> CoreAgent:
 def all_agents() -> List[str]:
     return list(REGISTRY.keys())
 
-# ... all your existing code ...
-
-def all_agents() -> List[str]:
-    return list(REGISTRY.keys())
-
-# Add this line at the very end:
+# Alias for backward compatibility
 get_agent = get
