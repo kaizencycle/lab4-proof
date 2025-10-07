@@ -25,3 +25,11 @@ def get(name: str) -> CoreAgent:
 
 def all_agents() -> List[str]:
     return list(REGISTRY.keys())
+
+# ... all your existing code ...
+
+def all_agents() -> List[str]:
+    return list(REGISTRY.keys())
+
+# Add this line at the very end:
+get_agent = get
