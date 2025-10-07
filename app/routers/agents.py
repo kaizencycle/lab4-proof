@@ -5,7 +5,7 @@ from pydantic import BaseModel
 # from api.dependencies.auth import require_user  # <- example
 
 # Agent SDK core (we’ll place it under api/founder/agents/*)
-from api.founder.agents.registry import all_agents
+from app.agent_sdk import all_agents 
 from api.founder.agents.engine import run_agent
 import api.founder.agents.core  # side-effect: registers Jade/Eve/Zeus/Hermes
 
