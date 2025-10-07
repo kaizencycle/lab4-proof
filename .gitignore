@@ -6,20 +6,15 @@ __pycache__/
 .venv/
 env/
 .pytest_cache/
-
 # Node
 reflections/node_modules/
 reflections/.next/
 reflections/dist/
-
 # System / IDE
 .DS_Store
 .vscode/
 .cursor/
-
 # Local JSON / exports
 backups/
 *.zip
-
-```
-*.json  
+*.json
