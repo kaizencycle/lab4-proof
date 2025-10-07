@@ -10,8 +10,7 @@ from app.agent_sdk import get_agent, all_agents
 from app.agent_sdk.register import get
 from app.agent_sdk.engine import run_agent
 
-# If you have a core.py that registers agents on import, uncomment this:
-# import app.agent_sdk.core
+import app.agent_sdk.core  # This triggers agent registration on startup
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 logger = logging.getLogger("agents")
