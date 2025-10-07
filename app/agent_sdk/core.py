@@ -1,4 +1,5 @@
-from .registry import CoreAgent, register
+# app/agent_sdk/core.py
+from .register import CoreAgent, register
 from .tools import ledger_write, shield_check, biointel_anchor
 
 def _bio(kind: str):
@@ -44,3 +45,5 @@ register(CoreAgent(
         {"name":"biointel","fn":_bio("HERMES_PULSE"),"description":"Anchor to Bio‑Intel."},
     ]
 ))
+
+print("✅ Agent SDK initialized — core agents registered.")
