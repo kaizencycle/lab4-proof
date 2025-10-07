@@ -1,6 +1,7 @@
+# app/agent_sdk/engine.py
 import os, json
 from openai import OpenAI
-from .registry import get
+from .register import get  # ← Fixed: was .registry, should be .register
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
@@ -11,7 +12,6 @@ def run_agent(name: str, prompt: str) -> dict:
     system = f"You are {agent.name}. Persona: {agent.persona}. Keep answers within ~120 words unless asked."
     if client is None:
         return {"agent": agent.name, "reply": f"[stub] {agent.name} would answer: {prompt[:80]}..."}
-
     res = client.chat.completions.create(
         model=MODEL,
         messages=[
@@ -23,7 +23,6 @@ def run_agent(name: str, prompt: str) -> dict:
     text = res.choices[0].message.content or ""
     tool_used = None
     tool_result = None
-
     if text.startswith("CALL:"):
         head, payload = text.split("|", 1)
         tool_name = head.replace("CALL:","").strip()
@@ -46,5 +45,4 @@ def run_agent(name: str, prompt: str) -> dict:
             temperature=0.6,
         )
         text = res2.choices[0].message.content or text
-
     return {"agent": agent.name, "reply": text, "tool_used": tool_used, "tool_result": tool_result}
