@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime, timezone
 import requests, os
 
-from api.constants.genesis import (
+from app.constants.genesis import (
     GENESIS_EPOCH_ISO,
     GENESIS_WALLET_ID, CUSTODIAN_WALLET_ID, COMMONS_WALLET_ID,
     GENESIS_LEDGER_ID, FOUNDER_LEDGER_ID,
@@ -71,7 +71,7 @@ def seed():
     # 3) Create wallets
     _post(f"{WALLETS_API}/create", {
         "walletId": GENESIS_WALLET_ID,
-        "owner": KAIZEN_AGENT_ID,      # autonomous custodian
+        "owner": KAIZEN_AGENT_ID,
         "type": "genesis",
         "balance": GENESIS_BALANCE_GIC,
         "locked_until": GENESIS_EPOCH_ISO,
@@ -80,7 +80,7 @@ def seed():
 
     _post(f"{WALLETS_API}/create", {
         "walletId": CUSTODIAN_WALLET_ID,
-        "owner": FOUNDER_AGENT_ID,     # Founder_Michael operational identity
+        "owner": FOUNDER_AGENT_ID,
         "type": "custodian",
         "balance": 0,
         "status": "active"
