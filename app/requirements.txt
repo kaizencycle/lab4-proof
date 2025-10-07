@@ -1,8 +1,9 @@
-fastapi>=0.100.0
-uvicorn[standard]>=0.23.0
-httpx>=0.24.0
-pydantic>=2.0.0
+fastapi
+uvicorn
+pydantic
+openai
+requests
 python-multipart
-python-dotenv
-openai>=1.0.0
+python-jose[cryptography]
+passlib[bcrypt]
 # ... your other dependencies
