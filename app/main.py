@@ -121,15 +121,21 @@ def _require_admin(x_admin_token: Optional[str] = Header(None)):
 # GIC REWARDS CONFIG + HELPERS
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 
+def safe_int(val: str, default: int) -> int:
+    """Extract integer from string, ignoring any non-numeric characters."""
+    import re
+    # Extract just the first number found
+    match = re.search(r'\d+', val)
+    return int(match.group()) if match else default
+
 if DEMO_MODE:
     GIC_PER_PRIVATE = 1
     GIC_PER_PUBLISH = 2
     REWARD_MIN_LEN = 1
 else:
-    # Strip any leading '=' from env vars (defensive)
-    GIC_PER_PRIVATE = int(os.getenv("GIC_PER_PRIVATE", "10").lstrip("="))
-    GIC_PER_PUBLISH = int(os.getenv("GIC_PER_PUBLISH", "25").lstrip("="))
-    REWARD_MIN_LEN = int(os.getenv("REWARD_MIN_LEN", "200").lstrip("="))
+    GIC_PER_PRIVATE = safe_int(os.getenv("GIC_PER_PRIVATE", "10"), 10)
+    GIC_PER_PUBLISH = safe_int(os.getenv("GIC_PER_PUBLISH", "25"), 25)
+    REWARD_MIN_LEN = safe_int(os.getenv("REWARD_MIN_LEN", "200"), 200)
 
 # New "featured" submission marker
 FEATURE_INTENT = "publish_feature"
@@ -778,6 +784,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
     }
     
+
 
 
 
