@@ -1,7 +1,7 @@
 # app/main.py
 from __future__ import annotations
-from fastapi import FastAPI, HTTPException, Header
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, HTTPException, Header, Request
+from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from pathlib import Path
@@ -10,12 +10,22 @@ import os
 import json
 import re
 import time
+import logging
 from dotenv import load_dotenv
+
+# --- Logging Configuration ------------------------------------------------
+logging.basicConfig(
+    level=logging.INFO, 
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+)
+log = logging.getLogger("app")
 
 # Load environment variables (with error handling)
 try:
     load_dotenv()
-except Exception:
+    log.info("Environment variables loaded")
+except Exception as e:
+    log.warning(f"Failed to load .env: {e}")
     # Set default values if .env loading fails
     os.environ.setdefault("NODE_ID", "cursor")
     os.environ.setdefault("AUTHOR", "Cursor AI (Kaizen Node)")
@@ -33,9 +43,10 @@ app = FastAPI(title="HIVE-PAW API (with ledger)", version="0.12.0")
 
 # CORS configuration
 ALLOWED_ORIGINS = [
-    "https://reflections-app.onrender.com",   # your Reflections frontend
-    "http://localhost:3000",             # local dev
-    "http://localhost:5173",             # vite dev server
+    "https://reflections-app.onrender.com",
+    "https://lab4-proof.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
 ]
 
 app.add_middleware(
@@ -46,25 +57,59 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-from app.auth import router as auth_router, admin_router
-from app.memory import router as memory_router
-from app.companions import router as companions_router
+# --- Global Error Handler ------------------------------------------------
+@app.exception_handler(Exception)
+async def unhandled_exception(request: Request, exc: Exception):
+    log.exception(f"Unhandled error: {request.method} {request.url}")
+    return JSONResponse(
+        {"ok": False, "error": "internal_error", "detail": str(exc)[:300]},
+        status_code=500,
+    )
 
-# NEW: Agent SDK + Genesis + Wallet routers
-from app.routers import agents as agents_router
-from app.routers import wallet as wallet_router
-from app.routers import genesis as genesis_router
+# Include routers with error handling
+try:
+    from app.auth import router as auth_router, admin_router
+    app.include_router(auth_router)
+    app.include_router(admin_router)
+    log.info("✅ Auth routers loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load auth routers: {e}")
 
-app.include_router(auth_router)
-app.include_router(admin_router)
-app.include_router(memory_router)
-app.include_router(companions_router)
+try:
+    from app.memory import router as memory_router
+    app.include_router(memory_router)
+    log.info("✅ Memory router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load memory router: {e}")
 
-# NEW: expose Agent SDK, Wallet shim, and Genesis seeding
-app.include_router(agents_router.router)
-app.include_router(wallet_router.router)
-app.include_router(genesis_router.router)
+try:
+    from app.companions import router as companions_router
+    app.include_router(companions_router)
+    log.info("✅ Companions router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load companions router: {e}")
+
+# Agent SDK + Genesis + Wallet routers
+try:
+    from app.routers import agents as agents_router
+    app.include_router(agents_router.router)
+    log.info("✅ Agents router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load agents router: {e}")
+
+try:
+    from app.routers import wallet as wallet_router
+    app.include_router(wallet_router.router)
+    log.info("✅ Wallet router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load wallet router: {e}")
+
+try:
+    from app.routers import genesis as genesis_router
+    app.include_router(genesis_router.router)
+    log.info("✅ Genesis router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load genesis router: {e}")
 
 # Admin token configuration
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
@@ -81,9 +126,9 @@ if DEMO_MODE:
     GIC_PER_PUBLISH = 2
     REWARD_MIN_LEN = 1
 else:    
-    GIC_PER_PRIVATE = ("GIC_PER_PRIVATE", "10")
-    GIC_PER_PUBLISH = ("GIC_PER_PUBLISH", "25")
-    REWARD_MIN_LEN = ("REWARD_MIN_LEN", "200")
+    GIC_PER_PRIVATE = int(os.getenv("GIC_PER_PRIVATE", "10"))
+    GIC_PER_PUBLISH = int(os.getenv("GIC_PER_PUBLISH", "25"))
+    REWARD_MIN_LEN = int(os.getenv("REWARD_MIN_LEN", "200"))
 
 # New "featured" submission marker
 FEATURE_INTENT = "publish_feature"
@@ -116,7 +161,6 @@ def append_jsonl(file_path: str, record: dict) -> str:
     return sha256_json(record)
 
 def _sse(data: dict, event: str = "message") -> bytes:
-    # SSE frames: event:<name>\ndata:<json>\n\n
     lines = []
     if event:
         lines.append(f"event: {event}")
@@ -137,7 +181,6 @@ def _humanize_seconds(s: int) -> str:
 
 # VERIFY HELPERS
 def _day_dir(date_str: str) -> Path:
-    """re-use your LEDGER_PATH via storage.py defaults (data/), but be robust"""
     base = os.environ.get("LEDGER_PATH", "data")
     return Path(base) / date_str
 
@@ -164,8 +207,6 @@ def _read_jsonl_file(p: Path) -> list[dict]:
 
 # BONUS HELPERS
 _BONUS_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-
-# Defaults (can be overridden via request body)
 _TOP_N = 10
 _MIN_LEN_ELIGIBLE = 200
 _BONUS_MIN = 50
@@ -199,15 +240,13 @@ def _append_jsonl(p: Path, obj: dict):
 from datetime import date as _date, datetime as _dt, timedelta as _td
 
 def _latest_full_week() -> tuple[_date, _date]:
-    # latest completed Mon..Sun window
     today = _date.today()
-    weekday = today.weekday()  # Mon=0..Sun=6
-    end = today - _td(days=weekday + 1)   # last Sunday
-    start = end - _td(days=6)             # previous Monday
+    weekday = today.weekday()
+    end = today - _td(days=weekday + 1)
+    start = end - _td(days=6)
     return start, end
 
 def _bonus_rank(cands: list[dict]) -> list[dict]:
-    # mock score: length + 10*votes (if present)
     ranked = []
     for c in cands:
         length = int(c.get("len", 0) or 0)
@@ -220,7 +259,6 @@ def _bonus_rank(cands: list[dict]) -> list[dict]:
     return ranked
 
 def _already_paid_keys(payout_day: str) -> set[tuple[str, str, str]]:
-    # returns {(user, hash, reason)}
     gic_p = _day_path(payout_day) / f"{payout_day}.gic.jsonl"
     seen = set()
     for tx in _read_jsonl(gic_p):
@@ -239,15 +277,13 @@ def _list_date_dirs() -> list[str]:
     for p in base.iterdir():
         if p.is_dir() and _DATE_RE.match(p.name):
             dates.append(p.name)
-    dates.sort()  # oldest -> newest
+    dates.sort()
     return dates
 
 def _safe_counts_for(date_str: str) -> dict:
-    # Check both root directory and subdirectory for files
     day = _day_dir(date_str)
     root = DATA_DIR
     
-    # Try root first (where files actually are), then fall back to subdirectory
     seed_p   = root / f"{date_str}.seed.json" if (root / f"{date_str}.seed.json").exists() else day / f"{date_str}.seed.json"
     echo_p_l = root / f"{date_str}.echo.jsonl" if (root / f"{date_str}.echo.jsonl").exists() else day / f"{date_str}.echo.jsonl"
     echo_p_j = root / f"{date_str}.echo.json" if (root / f"{date_str}.echo.json").exists() else day / f"{date_str}.echo.json"
@@ -259,7 +295,6 @@ def _safe_counts_for(date_str: str) -> dict:
     seal   = _read_json_file(seal_p)
     ledger = _read_json_file(ledger_p)
 
-    # sweeps: prefer JSONL, else try JSON array
     if echo_p_l.exists():
         sweeps = _read_jsonl_file(echo_p_l)
     elif echo_p_j.exists():
@@ -323,7 +358,6 @@ class Seal(BaseModel):
 
 # Mock agent summaries helper
 async def get_agent_summaries(conn):
-    # TEMP: mock a couple of agents so UI works now
     return [
         {"companion_id":"1111-aaaa","name":"Echo","archetype":"sage","user_id":"u-01","reflections":42,"gic":580,"since_last":"00:12:10"},
         {"companion_id":"2222-bbbb","name":"Jade","archetype":"mentor","user_id":"u-02","reflections":18,"gic":230,"since_last":"03:01:55"},
@@ -331,15 +365,15 @@ async def get_agent_summaries(conn):
 
 # STARTUP EVENT
 @app.on_event("startup")
-async def _boot_agents():
-    # If the SDK registers agents on import, nothing else is required here.
-    # This hook just confirms in logs that the kernel is live.
-    print("✅ Agent SDK initialized — core agents registered.")
+async def startup_event():
+    log.info("🚀 Hive API starting up...")
+    log.info(f"Demo mode: {DEMO_MODE}")
+    log.info(f"CORS origins: {ALLOWED_ORIGINS}")
 
 # BASIC ENDPOINTS
 @app.get("/")
 def read_root():
-    return {"status": "API is live", "message": "Hello from Reflections!"}
+    return {"status": "API is live", "message": "Hello from Reflections!", "version": "0.12.0"}
 
 @app.get("/health")
 async def health():
@@ -743,6 +777,7 @@ def bonus_run(req: BonusRun, x_admin_key: str = Header(default="")):
         "file": str(payout_file),
     }
     
+
 
 
 
