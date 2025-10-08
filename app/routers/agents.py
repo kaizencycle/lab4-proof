@@ -1,130 +1,105 @@
 # app/routers/agents.py
-from fastapi import APIRouter, Body, HTTPException
+import os, logging, httpx
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
-import logging
-
-# Import from your app.agent_sdk
-from app.agent_sdk import get_agent, all_agents
-from app.agent_sdk.register import get
-from app.agent_sdk.engine import run_agent
-
-import app.agent_sdk.core  # This triggers agent registration on startup
 
 router = APIRouter(prefix="/agents", tags=["agents"])
-logger = logging.getLogger("agents")
+log = logging.getLogger("agents")
 
-# ---------------- Schemas ----------------
-class MessageIn(BaseModel):
-    prompt: str
-    node_id: Optional[str] = None
-    companion_id: Optional[str] = None
-    metadata: Dict[str, Any] = {}
+# Register the companions you expose to the UI
+AGENTS = {
+    "Jade":   "Strategic Advisor",
+    "Eve":    "Wellness Guide",
+    "Hermes": "Quick Insights Guide",
+    "Zeus":   "Action Coach",
+}
 
-class BroadcastIn(BaseModel):
-    agents: List[str]
-    prompt: str
-    node_id: Optional[str] = None
-    metadata: Dict[str, Any] = {}
+# --- Model Router (pluggable targets) ------------------------------------
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # optional
+OPENAI_MODEL   = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_URL     = "https://api.openai.com/v1/chat/completions"
 
-# ---------------- Routes ----------------
-@router.get("/ping")
-def ping() -> Dict[str, Any]:
-    """Health check endpoint"""
-    try:
-        agents = all_agents()
-        logger.info(f"Ping successful. Agents: {agents}")
-        return {"status": "ok", "agents": agents}
-    except Exception as e:
-        logger.error(f"Ping failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Agent registry issue: {e}")
+# Flip routing order by env (e.g., "self_hosted,openai")
+ROUTE_ORDER = [s.strip() for s in os.getenv("MODEL_ROUTE", "openai,self_hosted").split(",") if s.strip()]
 
-@router.get("/list")
-def list_agents_route() -> Dict[str, Any]:
-    """Return agent names + short persona text."""
-    try:
-        names = all_agents()
-        out = []
-        for name in names:
-            try:
-                a = get(name)
-                out.append({"name": a.name, "persona": getattr(a, "persona", "")})
-            except KeyError:
-                continue
-        logger.info(f"Listed {len(out)} agents")
-        return {"count": len(out), "items": out}
-    except Exception as e:
-        logger.error(f"List agents failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+async def call_openai(prompt: str, persona: str) -> str:
+    if not OPENAI_API_KEY:
+        raise RuntimeError("openai_key_missing")
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.post(
+            OPENAI_URL,
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": OPENAI_MODEL,
+                "messages": [
+                    {"role": "system", "content": f"You are a {persona} in the Reflections ecosystem. Be precise, warm, and concise."},
+                    {"role": "user", "content": prompt},
+                ],
+            },
+        )
+        j = r.json()
+        return j.get("choices", [{}])[0].get("message", {}).get("content") or ""
 
-@router.post("/spawn/{name}")
-def spawn(name: str):
-    """No-op for stateless agents; hook if you later add per-user state."""
-    try:
-        a = get(name)
-        logger.info(f"Agent {name} spawned")
-        return {"ok": True, "agent": a.name}
-    except KeyError:
-        logger.error(f"Agent {name} not found")
-        raise HTTPException(status_code=404, detail=f"Agent '{name}' not found")
+async def call_self_hosted(prompt: str, persona: str) -> str:
+    """
+    Stub for your vLLM/TGI endpoint. Replace with your internal URL.
+    Example:
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        r = await client.post("https://models.yourdomain.com/generate", json={...})
+        return r.json().get("text","")
+    """
+    raise RuntimeError("self_hosted_not_configured")
 
-@router.post("/message/{name}")
-async def message(name: str, body: MessageIn = Body(...)):
-    """Send a message to an agent; returns reply and any tool usage."""
-    logger.info(f"Message to {name}: {body.prompt[:50]}...")
-    
-    try:
-        # Check if agent exists first
-        agent = get(name)
-        logger.info(f"Found agent: {agent.name}")
-        
-        # Run the agent
-        res = run_agent(name, body.prompt)
-        logger.info(f"Agent {name} responded: {str(res)[:100]}...")
-        
-        # Ensure we have a valid response structure
-        if not isinstance(res, dict):
-            res = {"reply": str(res), "agent": name}
-        
-        # Add metadata
-        res["meta"] = {
-            "node_id": body.node_id, 
-            "companion_id": body.companion_id, 
-            **(body.metadata or {})
-        }
-        
-        # Explicitly return JSONResponse to ensure proper formatting
-        return JSONResponse(content=res, status_code=200)
-        
-    except KeyError:
-        logger.error(f"Agent '{name}' not found in registry")
-        raise HTTPException(status_code=404, detail=f"Agent '{name}' not found")
-    except Exception as e:
-        logger.error(f"Agent run failed: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Agent run failed: {str(e)}")
-
-@router.post("/broadcast")
-def broadcast(body: BroadcastIn = Body(...)):
-    """Send one prompt to multiple agents and collect responses."""
-    logger.info(f"Broadcasting to {len(body.agents)} agents")
-    results = []
-    
-    for name in body.agents:
+async def model_generate(prompt: str, persona: str) -> str:
+    """
+    Tries providers by ROUTE_ORDER. Falls back on placeholder if all fail.
+    """
+    errors = []
+    for target in ROUTE_ORDER:
         try:
-            reply = run_agent(name, body.prompt)
-            results.append({
-                "agent": name, 
-                "ok": True, 
-                "reply": reply.get("reply") if isinstance(reply, dict) else str(reply),
-                "tool_used": reply.get("tool_used") if isinstance(reply, dict) else None
-            })
+            if target == "openai":
+                return await call_openai(prompt, persona)
+            elif target == "self_hosted":
+                return await call_self_hosted(prompt, persona)
         except Exception as e:
-            logger.error(f"Broadcast to {name} failed: {e}")
-            results.append({"agent": name, "ok": False, "error": str(e)})
-    
-    return JSONResponse(content={
-        "prompt": body.prompt, 
-        "results": results, 
-        "meta": {"node_id": body.node_id, **(body.metadata or {})}
-    }, status_code=200)
+            log.warning("Model '%s' failed: %s", target, e)
+            errors.append(f"{target}:{type(e).__name__}")
+    raise RuntimeError("all_models_failed: " + ",".join(errors))
+
+# --- Routes ---------------------------------------------------------------
+
+@router.get("/ping")
+async def ping():
+    return JSONResponse({"status": "ok", "agents": list(AGENTS.keys())})
+
+@router.post("/message/{agent_name}")
+async def message_agent(agent_name: str, request: Request):
+    if agent_name not in AGENTS:
+        raise HTTPException(status_code=404, detail=f"Agent '{agent_name}' not found")
+
+    # Parse JSON safely
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    prompt = (data.get("prompt") or "").strip()
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Missing 'prompt' field")
+
+    persona = AGENTS[agent_name]
+    fallback = f"{agent_name} ({persona}) is recalibrating. Please try again in a moment."
+
+    try:
+        # Main path: use the model router
+        reply = await model_generate(prompt, persona)
+        if not reply.strip():
+            reply = fallback
+        return JSONResponse({"agent": agent_name, "reply": reply, "status": "ok"}, status_code=200)
+    except Exception as e:
+        log.error("Agent error [%s]: %s", agent_name, e)
+        # Fallback, but ALWAYS return JSON
+        return JSONResponse({"agent": agent_name, "reply": fallback, "status": "fallback"}, status_code=200)
