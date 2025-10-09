@@ -1,88 +1,62 @@
 # app/routers/agents.py
-import os, httpx, logging
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+import os
 
 router = APIRouter(prefix="/agents", tags=["agents"])
-log = logging.getLogger("agents")
 
-AGENTS = {
-    "Jade": "Strategic Advisor",
-    "Eve": "Wellness Guide",
-    "Hermes": "Quick Insights Guide",
-    "Zeus": "Action Coach",
-}
+class Msg(BaseModel):
+    prompt: str
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+# if you’re using OpenAI’s SDK:
+from openai import OpenAI
+_client = None
+def get_client():
+    global _client
+    if _client is None:
+        api_key = os.getenv("OPENAI_API_KEY", "") or os.getenv("OPENAI_API_KEY_1", "")
+        if not api_key:
+            # still let the request finish with JSON
+            return None
+        _client = OpenAI(api_key=api_key)
+    return _client
 
+AGENTS = ["jade","eve","zeus","hermes"]
 
 @router.get("/ping")
-async def ping():
-    return JSONResponse({"status": "ok", "agents": list(AGENTS.keys())})
+def ping():
+    return {"status": "ok", "agents": [a.title() for a in AGENTS]}
 
+@router.post("/message/{name}")
+def message(name: str, body: Msg):
+    name = name.lower()
+    if name not in AGENTS:
+        return JSONResponse({"ok": False, "error": f"Unknown agent '{name}'"}, status_code=404)
 
-@router.post("/message/{agent_name}")
-async def message_agent(agent_name: str, request: Request):
-    """Main endpoint for Reflections chat."""
-    if agent_name not in AGENTS:
+    if not body.prompt or not body.prompt.strip():
+        return JSONResponse({"ok": False, "error": "Empty prompt"}, status_code=400)
+
+    client = get_client()
+    if client is None:
+        # Don’t crash—return JSON the UI can render
         return JSONResponse(
-            {"error": "not_found", "detail": f"Agent '{agent_name}' not found"}, status_code=404
-        )
-
-    # Parse JSON safely
-    try:
-        payload = await request.json()
-    except Exception:
-        return JSONResponse({"error": "invalid_json"}, status_code=400)
-
-    prompt = (payload.get("prompt") or "").strip()
-    if not prompt:
-        return JSONResponse({"error": "missing_prompt"}, status_code=400)
-
-    persona = AGENTS[agent_name]
-    fallback = f"{agent_name} ({persona}) is recalibrating. Please try again later."
-
-    # If no key configured, just echo
-    if not OPENAI_API_KEY:
-        return JSONResponse(
-            {"agent": agent_name, "reply": fallback, "status": "no_key"}, status_code=200
+            {"ok": False, "error": "OPENAI_API_KEY missing on server"},
+            status_code=500
         )
 
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            r = await client.post(
-                OPENAI_URL,
-                headers={
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": OPENAI_MODEL,
-                    "messages": [
-                        {"role": "system", "content": f"You are {persona}."},
-                        {"role": "user", "content": prompt},
-                    ],
-                },
-            )
-        data = r.json()
-        reply = (
-            data.get("choices", [{}])[0]
-            .get("message", {})
-            .get("content", "")
-            .strip()
+        # minimal example – swap to your chosen model + settings
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": f"You are {name.title()}, a helpful core agent."},
+                {"role": "user", "content": body.prompt},
+            ],
+            temperature=0.7,
         )
-        if not reply:
-            reply = fallback
-        return JSONResponse(
-            {"agent": agent_name, "reply": reply, "status": "ok"}, status_code=200
-        )
-
+        text = resp.choices[0].message.content if resp and resp.choices else ""
+        return JSONResponse({"ok": True, "agent": name, "reply": text or ""})
     except Exception as e:
-        log.error("Agent error [%s]: %s", agent_name, e)
-        # Always return valid JSON, even on failure
-        return JSONResponse(
-            {"agent": agent_name, "reply": fallback, "status": "fallback"},
-            status_code=200,
-        )
+        # Always JSON
+        return JSONResponse({"ok": False, "error": f"upstream_error: {str(e)}"}, status_code=502)
