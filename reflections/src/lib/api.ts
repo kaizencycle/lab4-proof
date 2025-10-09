@@ -157,3 +157,45 @@ export async function lab6Enroll(groupId: string): Promise<{ ok: boolean }> {
     return { ok: false };
   }
 }
+
+/** =========================================================================
+ *  Lab4 – Agents SDK endpoints
+ *  =======================================================================*/
+
+type AgentReply = { ok: boolean; agent?: string; reply?: string; error?: string };
+
+export async function pingAgents(): Promise<{ status: string; agents: string[] }> {
+  const base = LAB4;
+  if (!base) return { status: 'error', agents: [] };
+
+  const res = await fetch(`${base}/agents/ping`, { method: 'GET' });
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) return res.json();
+  return { status: 'error', agents: [] };
+}
+
+export async function sendAgentMessage(agent: string, prompt: string): Promise<AgentReply> {
+  const base = LAB4;
+  if (!base) return { ok: false, error: 'LAB4 base URL not set' };
+
+  let res: Response;
+  try {
+    res = await fetch(`${base}/agents/message/${agent}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ prompt }),
+    });
+  } catch (e: any) {
+    return { ok: false, error: `network_error: ${e?.message || String(e)}` };
+  }
+
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) {
+    const data = (await res.json()) as AgentReply;
+    if (!res.ok) return { ok: false, error: data?.error || `HTTP ${res.status}` };
+    return data;
+  }
+  // Non-JSON (HTML/empty) – make it explicit instead of crashing .json()
+  const text = await res.text();
+  return { ok: false, error: text || `HTTP ${res.status} (non-JSON)` };
+}
