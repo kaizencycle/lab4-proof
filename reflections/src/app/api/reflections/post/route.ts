@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-type Item = { id:string; user:string; text:string; ts:number; archetype?:string };
+type Item = {
+  id: string; user: string; text: string; ts: number;
+  archetype?: string;
+  lesson?: { topic: string; question: string; challenge: string } | null;
+  traceId?: string | null;
+};
 const MEM: Item[] = []; // MVP in-memory (per instance); optional Redis below
 const USE_REDIS = !!process.env.REDIS_URL;
 
@@ -21,10 +26,25 @@ async function dominantArchetype(user:string, text:string){
 
 export async function POST(req: NextRequest){
   try{
-    const { user, text } = await req.json();
+    const { user, text, apprentice } = await req.json();
     if (!text || !user) return NextResponse.json({ error:"missing user or text" }, { status:400 });
     const archetype = await dominantArchetype(user, text);
-    const item: Item = { id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, user, text, ts: Date.now(), archetype };
+    let lesson: Item["lesson"] = null;
+    let traceId: string | null = null;
+    if (apprentice){
+      try{
+        const r = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/oaa/reflect`, {
+          method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ user, text })
+        });
+        const j = await r.json();
+        if (j?.lesson) lesson = j.lesson;
+        traceId = j?.traceId || null;
+      }catch{}
+    }
+    const item: Item = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+      user, text, ts: Date.now(), archetype, lesson, traceId
+    };
 
     if (USE_REDIS){
       // @ts-ignore: dynamic import only if configured
@@ -35,6 +55,9 @@ export async function POST(req: NextRequest){
       r.disconnect();
     }else{
       MEM.unshift(item); if (MEM.length>200) MEM.pop();
+      // also expose on global for GET fallback
+      // @ts-ignore
+      (global as any).__REFL_MEM = MEM;
     }
 
     // Optionally record an Indexer event
@@ -43,7 +66,7 @@ export async function POST(req: NextRequest){
         await fetch(`${process.env.GIC_INDEXER_URL}/events/reflection`, {
           method:"POST",
           headers:{ "Content-Type":"application/json", "X-API-Key": process.env.GIC_INDEXER_KEY as string },
-          body: JSON.stringify({ user, text, ts: item.ts, archetype })
+          body: JSON.stringify({ user, text, ts: item.ts, archetype, apprentice: !!apprentice, trace_id: traceId })
         });
       }catch{}
     }
