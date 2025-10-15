@@ -97,6 +97,42 @@ try:
     from app.routers import wallet as wallet_router
     app.include_router(wallet_router.router)
     log.info("✅ Wallet router loaded")
+        {"ok": False, "error": "internal_error", "detail": str(exc)[:300]},
+        status_code=500,
+    )
+
+# Include routers with error handling
+try:
+    from app.auth import router as auth_router, admin_router
+    app.include_router(auth_router)
+    app.include_router(admin_router)
+    log.info("✅ Auth routers loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load auth routers: {e}")
+
+try:
+    from app.memory import router as memory_router
+    app.include_router(memory_router)
+    log.info("✅ Memory router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load memory router: {e}")
+
+try:
+    from app.companions import router as companions_router
+    app.include_router(companions_router)
+    log.info("✅ Companions router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load companions router: {e}")
+
+# Agent SDK + Genesis + Wallet routers
+try:
+    from app.routers import agents as agents_router
+    app.include_router(agents_router.router)
+    log.info("✅ Agents router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load agents router: {e}")
+
+try    log.info("✅ Wallet router loaded")
 except Exception as e:
     log.error(f"❌ Failed to load wallet router: {e}")
 
@@ -114,6 +150,19 @@ try:
     log.info("✅ Health router loaded")
 except Exception as e:
     log.error(f"❌ Failed to load health router: {e}")info("✅ Genesis router loaded")
+try:
+    from app.routers import repositories as repos_router
+    app.include_router(repos_router.router)
+    log.info("✅ Repositories router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load repositories router: {e}")
+
+try:
+    from app.repo_web_interface import router as web_router
+    app.include_router(web_router)
+    log.info("✅ Web interface router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load web interface router: {e}") Genesis router loaded")
 except Exception as e:
     log.error(f"❌ Failed to load genesis router: {e}")
 

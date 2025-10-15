@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Repo Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="bg-white shadow rounded-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">
+            <i class="fas fa-tachometer-alt mr-2"></i>
+            Dashboard
+        </h1>
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-blue-50 p-6 rounded-lg">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-folder text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Repositories</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_repositories }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-green-50 p-6 rounded-lg">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-robot text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Agents</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_agents }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-yellow-50 p-6 rounded-lg">
+                <div class="flex items-center">
+                    <div class="p-2 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-comments text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Messages</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_messages }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-purple-50 p-6 rounded-lg">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Active Sessions</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.active_sessions }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Repositories -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-clock mr-2"></i>
+                Recent Repositories
+            </h2>
+            <a href="/web/repos" class="text-blue-600 hover:text-blue-800">
+                View all <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        {% if recent_repos %}
+        <div class="space-y-3">
+            {% for repo in recent_repos %}
+            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg mr-4">
+                        <i class="fas fa-folder text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-900">{{ repo.name }}</h3>
+                        <p class="text-sm text-gray-600">{{ repo.full_name }}</p>
+                        {% if repo.description %}
+                        <p class="text-sm text-gray-500 mt-1">{{ repo.description[:100] }}{% if repo.description|length > 100 %}...{% endif %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                        {{ repo.status.value }}
+                    </span>
+                    <a href="/web/repos/{{ repo.id }}" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No repositories yet. <a href="/web/repos/add" class="text-blue-600 hover:text-blue-800">Add your first repository</a></p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Agents -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-robot mr-2"></i>
+                Recent Agents
+            </h2>
+            <a href="/web/agents" class="text-blue-600 hover:text-blue-800">
+                View all <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        {% if recent_agents %}
+        <div class="space-y-3">
+            {% for agent in recent_agents %}
+            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg mr-4">
+                        <i class="fas fa-robot text-green-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-900">{{ agent.name }}</h3>
+                        <p class="text-sm text-gray-600">{{ agent.agent_type.value }}</p>
+                        <p class="text-sm text-gray-500 mt-1">{{ agent.persona[:100] }}{% if agent.persona|length > 100 %}...{% endif %}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="px-2 py-1 text-xs font-medium {% if agent.is_active %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %} rounded-full">
+                        {% if agent.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                    <a href="/web/agents/{{ agent.id }}" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No agents yet. <a href="/web/repos" class="text-blue-600 hover:text-blue-800">Add a repository first</a></p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{{ repo.full_name }} - Repository & Agent Manager{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>{{ repo.full_name }}</h2>
+    <div class="repo-meta" style="margin-bottom: 20px;">
+        <span class="status-badge status-{{ repo.status.value }}">{{ repo.status.value }}</span>
+        {% if repo.language %}
+        <span>Language: {{ repo.language }}</span>
+        {% endif %}
+        {% if repo.topics %}
+        <span>Topics: {{ repo.topics|join(', ') }}</span>
+        {% endif %}
+    </div>
+    
+    {% if repo.description %}
+    <p style="margin-bottom: 20px; color: #666;">{{ repo.description }}</p>
+    {% endif %}
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{{ repo.url }}" target="_blank" class="btn">View on GitHub</a>
+        <a href="/web/repos/{{ repo.id }}/agents/add" class="btn btn-success">Add Agent</a>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Agents ({{ agents|length }})</h3>
+    {% if agents %}
+        <div class="repo-list">
+            {% for agent in agents %}
+            <div class="repo-item">
+                <div class="repo-name">
+                    <a href="/web/agents/{{ agent.id }}/chat">{{ agent.name }}</a>
+                    <span class="status-badge status-{{ 'active' if agent.is_active else 'inactive' }}">
+                        {{ 'active' if agent.is_active else 'inactive' }}
+                    </span>
+                </div>
+                <div class="repo-description">{{ agent.persona }}</div>
+                <div class="repo-meta">
+                    <span>Type: {{ agent.agent_type.value }}</span>
+                    <span>Created: {{ agent.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No agents found for this repository. <a href="/web/repos/{{ repo.id }}/agents/add">Add your first agent</a>!</p>
+    {% endif %}
+</div>
+{% endblock %}
