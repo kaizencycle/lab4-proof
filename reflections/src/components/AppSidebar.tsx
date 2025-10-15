@@ -5,11 +5,12 @@ import { useEffect, useState } from "react";
 import SidebarStatus from "@/components/SidebarStatus";
 
 const links = [
-  { href: "/", label: "Home", icon: "🏠" },
+  { href: "/feed", label: "Feed", icon: "📰" },      // default landing
   { href: "/onboarding", label: "Onboarding", icon: "🧭" },
   { href: "/login", label: "Login", icon: "🔐" },
   { href: "/companion", label: "Companion", icon: "🤝" },
   { href: "/forest", label: "Forest", icon: "🌳" },
+  { href: "/programs", label: "Programs", icon: "✨" },
   { href: "/consensus", label: "Consensus", icon: "🗳️" },
 ];
 
