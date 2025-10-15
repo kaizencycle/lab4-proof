@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+openai
+requests
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
+# ... your other dependencies
