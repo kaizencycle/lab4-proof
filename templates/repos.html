@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Repositories - Repo Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-folder mr-2"></i>
+            Repositories
+        </h1>
+        <a href="/web/repos/add" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <i class="fas fa-plus mr-2"></i>
+            Add Repository
+        </a>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex space-x-1">
+            <a href="/web/repos" class="px-4 py-2 rounded-lg {% if not current_status %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+                All ({{ repos|length }})
+            </a>
+            <a href="/web/repos?status=active" class="px-4 py-2 rounded-lg {% if current_status == 'active' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+                Active
+            </a>
+            <a href="/web/repos?status=inactive" class="px-4 py-2 rounded-lg {% if current_status == 'inactive' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+                Inactive
+            </a>
+            <a href="/web/repos?status=archived" class="px-4 py-2 rounded-lg {% if current_status == 'archived' %}bg-blue-100 text-blue-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+                Archived
+            </a>
+        </div>
+    </div>
+
+    <!-- Repositories List -->
+    <div class="bg-white shadow rounded-lg">
+        {% if repos %}
+        <div class="divide-y divide-gray-200">
+            {% for repo in repos %}
+            <div class="p-6 hover:bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-blue-100 rounded-lg mr-4">
+                            <i class="fas fa-folder text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ repo.name }}</h3>
+                            <p class="text-sm text-gray-600">{{ repo.full_name }}</p>
+                            {% if repo.description %}
+                            <p class="text-sm text-gray-500 mt-1">{{ repo.description }}</p>
+                            {% endif %}
+                            <div class="flex items-center space-x-4 mt-2">
+                                {% if repo.language %}
+                                <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                                    <i class="fas fa-code mr-1"></i>
+                                    {{ repo.language }}
+                                </span>
+                                {% endif %}
+                                <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    {{ repo.created_at.strftime('%Y-%m-%d') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="px-3 py-1 text-sm font-medium rounded-full
+                            {% if repo.status.value == 'active' %}bg-green-100 text-green-800
+                            {% elif repo.status.value == 'inactive' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ repo.status.value.title() }}
+                        </span>
+                        <div class="flex space-x-2">
+                            <a href="{{ repo.url }}" target="_blank" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a href="/web/repos/{{ repo.id }}" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-folder-open text-gray-400 text-6xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No repositories found</h3>
+            <p class="text-gray-500 mb-6">
+                {% if current_status %}
+                No {{ current_status }} repositories found.
+                {% else %}
+                Get started by adding your first repository.
+                {% endif %}
+            </p>
+            <a href="/web/repos/add" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-plus mr-2"></i>
+                Add Repository
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

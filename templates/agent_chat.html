@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Chat with {{ agent.name }} - {{ repo.full_name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Chat with {{ agent.name }}</h2>
+    <div class="repo-meta" style="margin-bottom: 20px;">
+        <span>Repository: <a href="/web/repos/{{ repo.id }}">{{ repo.full_name }}</a></span>
+        <span>Type: {{ agent.agent_type.value }}</span>
+        <span class="status-badge status-{{ 'active' if agent.is_active else 'inactive' }}">
+            {{ 'active' if agent.is_active else 'inactive' }}
+        </span>
+    </div>
+    
+    <p style="color: #666; margin-bottom: 20px;">{{ agent.persona }}</p>
+    
+    {% if request.query_params.get('message') %}
+    <div class="success">
+        <strong>Agent Response:</strong><br>
+        {{ request.query_params.get('message') }}
+    </div>
+    {% endif %}
+    
+    <form method="post" action="/web/agents/{{ agent.id }}/message">
+        <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" required placeholder="Ask {{ agent.name }} anything about {{ repo.name }}..."></textarea>
+        </div>
+        
+        <div style="text-align: center;">
+            <button type="submit" class="btn">Send Message</button>
+            <a href="/web/repos/{{ repo.id }}" class="btn btn-secondary">Back to Repository</a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3>About {{ agent.name }}</h3>
+    <p><strong>System Prompt:</strong></p>
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 0.9rem;">
+        {{ agent.system_prompt }}
+    </div>
+</div>
+{% endblock %}

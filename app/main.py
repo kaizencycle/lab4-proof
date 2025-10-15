@@ -97,10 +97,7 @@ try:
 except Exception as e:
     log.error(f"❌ Failed to load agents router: {e}")
 
-try:
-    from app.routers import wallet as wallet_router
-    app.include_router(wallet_router.router)
-    log.info("✅ Wallet router loaded")
+try    log.info("✅ Wallet router loaded")
 except Exception as e:
     log.error(f"❌ Failed to load wallet router: {e}")
 
@@ -108,6 +105,22 @@ try:
     from app.routers import genesis as genesis_router
     app.include_router(genesis_router.router)
     log.info("✅ Genesis router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load genesis router: {e}")
+
+try:
+    from app.routers import repositories as repos_router
+    app.include_router(repos_router.router)
+    log.info("✅ Repositories router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load repositories router: {e}")
+
+try:
+    from app.repo_web_interface import router as web_router
+    app.include_router(web_router)
+    log.info("✅ Web interface router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load web interface router: {e}") Genesis router loaded")
 except Exception as e:
     log.error(f"❌ Failed to load genesis router: {e}")
 
