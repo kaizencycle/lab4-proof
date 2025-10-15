@@ -13,7 +13,7 @@ export default function FeedPage(){
   const [busy,setBusy]=useState(false);
 
   useEffect(()=>{ (async()=>{
-    const me = await fetch("/api/me").then(r=>r.ok?r.json():{});
+    const me = await fetch("/api/me").then(r=>r.ok?r.json():{}) as { handle?: string };
     if (me?.handle){ setHandle(me.handle); }
     // initial balances (if configured)
     if (process.env.NEXT_PUBLIC_GIC_INDEXER_URL && me?.handle) {
@@ -32,12 +32,12 @@ export default function FeedPage(){
   }
   useEffect(()=>{ loadFeed(); const t=setInterval(loadFeed, 15000); return ()=>clearInterval(t); },[]);
 
-  async function onPost(text:string){
+  async function onPost(text:string, apprentice:boolean){
     if (!text.trim()) return;
     setBusy(true);
     const r = await fetch("/api/reflections/post", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ user: handle||"guest", text })
+      body: JSON.stringify({ user: handle||"guest", text, apprentice })
     });
     setBusy(false);
     if (!r.ok){ const j = await r.json().catch(()=>({error:"post failed"})); alert(j.error||"Post failed"); return; }
