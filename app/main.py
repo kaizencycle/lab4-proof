@@ -62,11 +62,7 @@ app.add_middleware(
 async def unhandled_exception(request: Request, exc: Exception):
     log.exception(f"Unhandled error: {request.method} {request.url}")
     return JSONResponse(
-        {"ok": False, "error": "internal_error", "detail": str(exc)[:300]},
-        status_code=500,
-    )
-
-# Include routers with error handling
+        {"ok": False, "error": "internal_err# Include routers with error handling
 try:
     from app.auth import router as auth_router, admin_router
     app.include_router(auth_router)
@@ -108,6 +104,16 @@ try:
     from app.routers import genesis as genesis_router
     app.include_router(genesis_router.router)
     log.info("✅ Genesis router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load genesis router: {e}")
+
+# Health monitoring router
+try:
+    from app.routers import health as health_router
+    app.include_router(health_router.router)
+    log.info("✅ Health router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load health router: {e}")info("✅ Genesis router loaded")
 except Exception as e:
     log.error(f"❌ Failed to load genesis router: {e}")
 
@@ -364,10 +370,33 @@ class Seal(BaseModel):
     meta: Dict[str, Any] = Field(default_factory=dict)
 
 # Mock agent summaries helper
-async def get_agent_summaries(conn):
-    return [
-        {"companion_id":"1111-aaaa","name":"Echo","archetype":"sage","user_id":"u-01","reflections":42,"gic":580,"since_last":"00:12:10"},
-        {"companion_id":"2222-bbbb","name":"Jade","archetype":"mentor","user_id":"u-02","reflections":18,"gic":230,"since_last":"03:01:55"},
+async def get_ag# STARTUP EVENT
+@app.on_event("startup")
+async def startup_event():
+    log.info("🚀 Hive API starting up...")
+    log.info(f"Demo mode: {DEMO_MODE}")
+    log.info(f"CORS origins: {ALLOWED_ORIGINS}")
+    
+    # Start health monitoring service
+    try:
+        from app.health_service import health_service
+        await health_service.start()
+        log.info("✅ Health monitoring service started")
+    except Exception as e:
+        log.error(f"❌ Failed to start health monitoring service: {e}")
+
+# SHUTDOWN EVENT
+@app.on_event("shutdown")
+async def shutdown_event():
+    log.info("🛑 Hive API shutting down...")
+    
+    # Stop health monitoring service
+    try:
+        from app.health_service import health_service
+        await health_service.stop()
+        log.info("✅ Health monitoring service stopped")
+    except Exception as e:
+        log.error(f"❌ Failed to stop health monitoring service: {e}"):"2222-bbbb","name":"Jade","archetype":"mentor","user_id":"u-02","reflections":18,"gic":230,"since_last":"03:01:55"},
     ]
 
 # STARTUP EVENT
