@@ -1,5 +1,5 @@
 # app/routers/repositories.py
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from fastapi.responses import JSONResponse
 from typing import List, Optional
 import os
@@ -12,12 +12,13 @@ from ..repo_models import (
     RepoStatus,
     AgentType
 )
+from ..auth import admin_required, AdminContext
 
-router = APIRouter(prefix="/repos", tags=["repositories"])
+router = APIRouter(prefix="/admin/repos", tags=["admin-repositories"])
 
 # Repository endpoints
 @router.post("/")
-async def create_repository(repo_data: RepoCreateRequest):
+async def create_repository(repo_data: RepoCreateRequest, ctx: AdminContext = Depends(admin_required)):
     """Create a new repository"""
     try:
         # Check if repository already exists
@@ -36,7 +37,8 @@ async def create_repository(repo_data: RepoCreateRequest):
 @router.get("/")
 async def list_repositories(
     status: Optional[RepoStatus] = Query(None, description="Filter by repository status"),
-    limit: int = Query(100, description="Maximum number of repositories to return")
+    limit: int = Query(100, description="Maximum number of repositories to return"),
+    ctx: AdminContext = Depends(admin_required)
 ):
     """List all repositories"""
     try:
@@ -53,7 +55,7 @@ async def list_repositories(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{repo_id}")
-async def get_repository(repo_id: str):
+async def get_repository(repo_id: str, ctx: AdminContext = Depends(admin_required)):
     """Get a specific repository with its agents"""
     try:
         repo_data = repo_storage.get_repo_with_agents(repo_id)
@@ -67,7 +69,7 @@ async def get_repository(repo_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{repo_id}")
-async def update_repository(repo_id: str, updates: dict):
+async def update_repository(repo_id: str, updates: dict, ctx: AdminContext = Depends(admin_required)):
     """Update a repository"""
     try:
         repo = repo_storage.update_repository(repo_id, updates)
@@ -81,7 +83,7 @@ async def update_repository(repo_id: str, updates: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/{repo_id}")
-async def delete_repository(repo_id: str):
+async def delete_repository(repo_id: str, ctx: AdminContext = Depends(admin_required)):
     """Delete a repository and all its agents"""
     try:
         success = repo_storage.delete_repository(repo_id)
@@ -96,7 +98,7 @@ async def delete_repository(repo_id: str):
 
 # Agent endpoints
 @router.post("/{repo_id}/agents")
-async def create_agent(repo_id: str, agent_data: AgentCreateRequest):
+async def create_agent(repo_id: str, agent_data: AgentCreateRequest, ctx: AdminContext = Depends(admin_required)):
     """Create a new agent for a repository"""
     try:
         # Verify repository exists
@@ -127,7 +129,8 @@ async def create_agent(repo_id: str, agent_data: AgentCreateRequest):
 async def list_repo_agents(
     repo_id: str,
     agent_type: Optional[AgentType] = Query(None, description="Filter by agent type"),
-    active_only: bool = Query(True, description="Only return active agents")
+    active_only: bool = Query(True, description="Only return active agents"),
+    ctx: AdminContext = Depends(admin_required)
 ):
     """List all agents for a repository"""
     try:
