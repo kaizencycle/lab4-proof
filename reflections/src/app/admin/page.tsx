@@ -104,6 +104,23 @@ export default function AdminPage() {
 
       {ok && (
         <>
+          <div style={{marginBottom: 16, display: "flex", gap: 12, alignItems: "center"}}>
+            <h1 style={{margin: 0}}>Founder Console</h1>
+            <a 
+              href="/admin/health" 
+              style={{
+                padding: "8px 16px",
+                background: "#1a1d24",
+                border: "1px solid #2a2f3a",
+                borderRadius: "6px",
+                color: "#cfd7e3",
+                textDecoration: "none",
+                fontSize: "14px"
+              }}
+            >
+              🏥 Health Monitor
+            </a>
+          </div>
           <MetricsBar metrics={metrics} onRefresh={load} />
           <NodeGraph agents={agents} />
           <AgentTable agents={agents} />

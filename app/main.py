@@ -62,6 +62,41 @@ app.add_middleware(
 async def unhandled_exception(request: Request, exc: Exception):
     log.exception(f"Unhandled error: {request.method} {request.url}")
     return JSONResponse(
+        {"ok": False, "error": "internal_err# Include routers with error handling
+try:
+    from app.auth import router as auth_router, admin_router
+    app.include_router(auth_router)
+    app.include_router(admin_router)
+    log.info("✅ Auth routers loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load auth routers: {e}")
+
+try:
+    from app.memory import router as memory_router
+    app.include_router(memory_router)
+    log.info("✅ Memory router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load memory router: {e}")
+
+try:
+    from app.companions import router as companions_router
+    app.include_router(companions_router)
+    log.info("✅ Companions router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load companions router: {e}")
+
+# Agent SDK + Genesis + Wallet routers
+try:
+    from app.routers import agents as agents_router
+    app.include_router(agents_router.router)
+    log.info("✅ Agents router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load agents router: {e}")
+
+try:
+    from app.routers import wallet as wallet_router
+    app.include_router(wallet_router.router)
+    log.info("✅ Wallet router loaded")
         {"ok": False, "error": "internal_error", "detail": str(exc)[:300]},
         status_code=500,
     )
@@ -108,6 +143,13 @@ try:
 except Exception as e:
     log.error(f"❌ Failed to load genesis router: {e}")
 
+# Health monitoring router
+try:
+    from app.routers import health as health_router
+    app.include_router(health_router.router)
+    log.info("✅ Health router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load health router: {e}")info("✅ Genesis router loaded")
 try:
     from app.routers import repositories as repos_router
     app.include_router(repos_router.router)
@@ -377,10 +419,33 @@ class Seal(BaseModel):
     meta: Dict[str, Any] = Field(default_factory=dict)
 
 # Mock agent summaries helper
-async def get_agent_summaries(conn):
-    return [
-        {"companion_id":"1111-aaaa","name":"Echo","archetype":"sage","user_id":"u-01","reflections":42,"gic":580,"since_last":"00:12:10"},
-        {"companion_id":"2222-bbbb","name":"Jade","archetype":"mentor","user_id":"u-02","reflections":18,"gic":230,"since_last":"03:01:55"},
+async def get_ag# STARTUP EVENT
+@app.on_event("startup")
+async def startup_event():
+    log.info("🚀 Hive API starting up...")
+    log.info(f"Demo mode: {DEMO_MODE}")
+    log.info(f"CORS origins: {ALLOWED_ORIGINS}")
+    
+    # Start health monitoring service
+    try:
+        from app.health_service import health_service
+        await health_service.start()
+        log.info("✅ Health monitoring service started")
+    except Exception as e:
+        log.error(f"❌ Failed to start health monitoring service: {e}")
+
+# SHUTDOWN EVENT
+@app.on_event("shutdown")
+async def shutdown_event():
+    log.info("🛑 Hive API shutting down...")
+    
+    # Stop health monitoring service
+    try:
+        from app.health_service import health_service
+        await health_service.stop()
+        log.info("✅ Health monitoring service stopped")
+    except Exception as e:
+        log.error(f"❌ Failed to stop health monitoring service: {e}"):"2222-bbbb","name":"Jade","archetype":"mentor","user_id":"u-02","reflections":18,"gic":230,"since_last":"03:01:55"},
     ]
 
 # STARTUP EVENT
