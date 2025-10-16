@@ -4,7 +4,7 @@ pydantic
 python-dotenv
 openai
 requests
+httpx
 python-multipart
 python-jose[cryptography]
 passlib[bcrypt]
-# ... your other dependencies
