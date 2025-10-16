@@ -96,19 +96,28 @@ export default function ReflectionPost({ post }:{ post:Reflection }){
       )}
 
       <div className="reactions">
-        <button className="reaction-btn" onClick={()=>setAgree(x=>x+1)}>
-          <span className="reaction-icon">💡</span>
-          <span className="reaction-text">Agree</span>
+        <button className="reaction-btn like-btn" onClick={()=>setAgree(x=>x+1)}>
+          <span className="reaction-icon">👍</span>
+          <span className="reaction-text">Like</span>
           {agree > 0 && <span className="reaction-count">({agree})</span>}
         </button>
-        <button className="reaction-btn" onClick={()=>setInsight(x=>x+1)}>
+        <button className="reaction-btn love-btn" onClick={()=>setInsight(x=>x+1)}>
+          <span className="reaction-icon">❤️</span>
+          <span className="reaction-text">Love</span>
+          {insight > 0 && <span className="reaction-count">({insight})</span>}
+        </button>
+        <button className="reaction-btn insight-btn" onClick={()=>setInsight(x=>x+1)}>
           <span className="reaction-icon">✨</span>
           <span className="reaction-text">Insight</span>
           {insight > 0 && <span className="reaction-count">({insight})</span>}
         </button>
-        <button className="reaction-btn" onClick={()=>alert("Threading coming soon")}>
-          <span className="reaction-icon">🪞</span>
-          <span className="reaction-text">Reflect</span>
+        <button className="reaction-btn comment-btn" onClick={()=>alert("Comments coming soon")}>
+          <span className="reaction-icon">💬</span>
+          <span className="reaction-text">Comment</span>
+        </button>
+        <button className="reaction-btn share-btn" onClick={()=>alert("Sharing coming soon")}>
+          <span className="reaction-icon">📤</span>
+          <span className="reaction-text">Share</span>
         </button>
       </div>
     </article>

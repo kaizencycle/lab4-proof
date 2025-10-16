@@ -50,11 +50,11 @@ export default function AppSidebar() {
       <aside className={`sb ${open ? "open" : ""}`}>
         <div className="sb-head">
           <div className="logo-container">
-            <span className="logo">✨</span>
+            <span className="logo">💎</span>
           </div>
           <div className="brand-text">
-            <strong>Reflections</strong>
-            <span className="brand-subtitle">AI Companion</span>
+            <strong style={{color: 'var(--facebook-gold)', textShadow: '0 0 10px rgba(255,215,0,0.3)'}}>Reflections</strong>
+            <span className="brand-subtitle" style={{color: 'var(--facebook-gold)', opacity: 0.8}}>AI Companion</span>
           </div>
         </div>
         <nav className="sb-nav">

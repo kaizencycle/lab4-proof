@@ -104,7 +104,12 @@ export default function FeedPage(){
         <section className="col main-feed">
           <div className="feed-header">
             <h2>Community Reflections</h2>
-            <p className="feed-subtitle">Share your insights and learn from others</p>
+            <p className="feed-subtitle">Share your insights and learn from others in our AI-powered learning community</p>
+            <div className="feed-stats">
+              <span className="stat-item">📊 {feed.length} Reflections</span>
+              <span className="stat-item">👥 Active Community</span>
+              <span className="stat-item">🚀 AI-Powered</span>
+            </div>
           </div>
           <div className="panel">
             <ReflectionInput placeholder="What did you learn today?" onSubmit={onPost} busy={busy}/>
