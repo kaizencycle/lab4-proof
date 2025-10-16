@@ -1,11 +1,33 @@
 # Dependencies for HIVE-PAW API
-fastapi
-uvicorn
-pydantic
-python-dotenv
-openai
-requests
-httpx
-python-multipart
-python-jose[cryptography]
-passlib[bcrypt]
+# Core FastAPI and web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0
+python-dotenv>=1.0.0
+
+# HTTP clients and requests
+requests>=2.32.0
+httpx>=0.27.0
+
+# Authentication and security
+python-jose[cryptography]>=3.5.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.9
+
+# AI and OpenAI
+openai>=2.4.0
+
+# Additional utilities that might be needed
+# (These are often used in FastAPI projects)
+starlette>=0.37.0
+typing-extensions>=4.8.0
+annotated-types>=0.6.0
+
+# Testing dependencies (for completeness)
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+httpx>=0.27.0  # Also used for testing
+
+# Development and build tools
+wheel>=0.40.0
+setuptools>=65.0.0
