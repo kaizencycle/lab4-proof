@@ -37,35 +37,79 @@ export default function ReflectionPost({ post }:{ post:Reflection }){
 
   return (
     <article className="post">
-      <div className="meta">
-        <span className="name">{post.user}</span>
-        <span className="time">· {when}</span>
-        {post.archetype && <span className="tag">{post.archetype}</span>}
+      <div className="post-header">
+        <div className="user-info">
+          <div className="user-avatar">
+            <span>{post.user.charAt(0).toUpperCase()}</span>
+          </div>
+          <div className="user-details">
+            <span className="name">{post.user}</span>
+            <span className="time">{when}</span>
+          </div>
+        </div>
+        {post.archetype && (
+          <div className="archetype-badge">
+            <span className="tag">{post.archetype}</span>
+          </div>
+        )}
       </div>
-      <div style={{marginTop:6, lineHeight:1.5}}>{post.text}</div>
+      
+      <div className="post-content">
+        <p>{post.text}</p>
+      </div>
+
       {post.lesson && (
-        <div className="panel" style={{marginTop:8}}>
-          <div className="mini" style={{marginBottom:6}}>Apprentice Lesson</div>
-          <div><strong>Topic:</strong> {post.lesson.topic}</div>
-          <div style={{marginTop:6}}><strong>Question:</strong> {post.lesson.question}</div>
-          <div className="mini" style={{marginTop:6}}><em>Challenge:</em> {post.lesson.challenge}</div>
-        </div>
-      )}
-      {echoes.length>0 && (
-        <div className="panel" style={{marginTop:8}}>
-          <div className="mini" style={{marginBottom:6}}>OAA Echoes</div>
-          {echoes.map((e:any, i:number)=>(
-            <div key={i} style={{marginTop:6}}>
-              <div className="mini">{new Date(e.ts || Date.now()).toLocaleString()}</div>
-              <div>{e?.content?.text || "(echo)"}</div>
+        <div className="lesson-card">
+          <div className="lesson-header">
+            <span className="lesson-icon">🎓</span>
+            <span className="lesson-title">Apprentice Lesson</span>
+          </div>
+          <div className="lesson-content">
+            <div className="lesson-item">
+              <strong>Topic:</strong> {post.lesson.topic}
             </div>
-          ))}
+            <div className="lesson-item">
+              <strong>Question:</strong> {post.lesson.question}
+            </div>
+            <div className="lesson-challenge">
+              <em>Challenge:</em> {post.lesson.challenge}
+            </div>
+          </div>
         </div>
       )}
+
+      {echoes.length>0 && (
+        <div className="echoes-card">
+          <div className="echoes-header">
+            <span className="echoes-icon">🔄</span>
+            <span className="echoes-title">OAA Echoes</span>
+          </div>
+          <div className="echoes-content">
+            {echoes.map((e:any, i:number)=>(
+              <div key={i} className="echo-item">
+                <div className="echo-time">{new Date(e.ts || Date.now()).toLocaleString()}</div>
+                <div className="echo-text">{e?.content?.text || "(echo)"}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="reactions">
-        <button className="btn" onClick={()=>setAgree(x=>x+1)}>💡 Agree {agree?`(${agree})`:""}</button>
-        <button className="btn" onClick={()=>setInsight(x=>x+1)}>✨ Insight {insight?`(${insight})`:""}</button>
-        <button className="btn" onClick={()=>alert("Threading coming soon")}>🪞 Reflect</button>
+        <button className="reaction-btn" onClick={()=>setAgree(x=>x+1)}>
+          <span className="reaction-icon">💡</span>
+          <span className="reaction-text">Agree</span>
+          {agree > 0 && <span className="reaction-count">({agree})</span>}
+        </button>
+        <button className="reaction-btn" onClick={()=>setInsight(x=>x+1)}>
+          <span className="reaction-icon">✨</span>
+          <span className="reaction-text">Insight</span>
+          {insight > 0 && <span className="reaction-count">({insight})</span>}
+        </button>
+        <button className="reaction-btn" onClick={()=>alert("Threading coming soon")}>
+          <span className="reaction-icon">🪞</span>
+          <span className="reaction-text">Reflect</span>
+        </button>
       </div>
     </article>
   );

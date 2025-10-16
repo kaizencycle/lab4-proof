@@ -34,30 +34,62 @@ export default function SidebarStatus(){
 
   return (
     <div className="sb-status">
-      <div className="row">
-        <span className="mini">👤</span>
-        <span className="mono">{handle || "guest"}</span>
+      <div className="status-header">
+        <h4>Status</h4>
       </div>
-      <div className="row">
-        <span className="mini">🪙</span>
-        <span className="mono">GIC {gic.toFixed(2)}</span>
+      
+      <div className="status-section">
+        <div className="status-item">
+          <div className="status-icon">👤</div>
+          <div className="status-content">
+            <div className="status-label">User</div>
+            <div className="status-value">{handle || "guest"}</div>
+          </div>
+        </div>
+        
+        <div className="status-item">
+          <div className="status-icon">🪙</div>
+          <div className="status-content">
+            <div className="status-label">GIC Balance</div>
+            <div className="status-value">{gic.toFixed(2)}</div>
+          </div>
+        </div>
       </div>
-      <div className="prog">
-        <div className="bar" style={{width:`${p10}%`}} />
+
+      <div className="progress-section">
+        <div className="progress-item">
+          <div className="progress-header">
+            <span className="progress-label">Companion Progress</span>
+            <span className="progress-percentage">{Math.round(p10)}%</span>
+          </div>
+          <div className="prog">
+            <div className="bar" style={{width:`${p10}%`}} />
+          </div>
+          <small className="progress-hint">Next companion at 10 GIC</small>
+        </div>
+
+        <div className="progress-item">
+          <div className="progress-header">
+            <span className="progress-label">Consensus Progress</span>
+            <span className="progress-percentage">{Math.round(p100)}%</span>
+          </div>
+          <div className="prog">
+            <div className="bar" style={{width:`${p100}%`}} />
+          </div>
+          <small className="progress-hint">Consensus at 100 GIC</small>
+        </div>
       </div>
-      <small className="muted">Next companion at 10 GIC</small>
-      <div className="row">
+
+      <div className="status-actions">
         <a className="tag" href="/forest" title="Go to Forest">
-          🌳 {trees.toFixed(1)} (mo)
+          🌳 {trees.toFixed(1)} months
         </a>
+        {canConsensus && (
+          <a className="btn tiny" href="/consensus" title="Enter Consensus">
+            Enter Consensus
+          </a>
+        )}
       </div>
-      <div className="prog">
-        <div className="bar" style={{width:`${p100}%`}} />
-      </div>
-      <small className="muted">Consensus at 100 GIC</small>
-      {canConsensus && (
-        <a className="btn tiny" href="/consensus" title="Enter Consensus">Enter Consensus</a>
-      )}
     </div>
   );
 }

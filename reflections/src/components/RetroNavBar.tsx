@@ -44,11 +44,14 @@ export default function RetroNavBar({
   return (
     <nav className="retro-nav" role="navigation" aria-label="Primary">
       <div className="brand">
-        <span className="logo">[ LAB7-PROOF :: OAA ]</span>
+        <div className="logo-container">
+          <span className="logo">[ LAB7-PROOF :: OAA ]</span>
+        </div>
         {oaaLearning && (
-          <span className="ticker" aria-live="polite" aria-label="OAA is learning">
-            ▸ Learning… ▸ Learning… ▸
-          </span>
+          <div className="learning-indicator" aria-live="polite" aria-label="OAA is learning">
+            <div className="learning-dot"></div>
+            <span>Learning…</span>
+          </div>
         )}
       </div>
 
@@ -70,33 +73,86 @@ export default function RetroNavBar({
 
       <style jsx>{`
         .retro-nav {
-          font-family: "Trebuchet MS", Verdana, Arial, sans-serif;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           display: flex; align-items: center; justify-content: space-between;
-          padding: 8px 12px; border: 1px solid #c7d0e1; background: #eef3ff;
-          box-shadow: inset 0 1px 0 #fff; position: sticky; top: 0; z-index: 1000;
+          padding: 16px 24px; border: 1px solid var(--border); background: rgba(17,19,24,0.9);
+          backdrop-filter: blur(12px); box-shadow: var(--shadow-lg); position: sticky; top: 0; z-index: 1000;
         }
-        .brand { display: flex; align-items: baseline; gap: 10px; }
-        .logo { font-weight: 700; color: #1e3a8a; letter-spacing: .5px; }
-        .ticker { font-size: 12px; color: #334155; white-space: nowrap; animation: marquee 8s linear infinite; }
-        @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+        .brand { display: flex; align-items: center; gap: 16px; }
+        .logo-container {
+          background: var(--gradient);
+          padding: 8px 16px;
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow);
+        }
+        .logo { font-weight: 700; color: white; letter-spacing: 0.5px; font-size: 0.875rem; }
+        .learning-indicator {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.75rem;
+          color: var(--muted);
+          background: var(--surface);
+          padding: 6px 12px;
+          border-radius: var(--radius);
+          border: 1px solid var(--border);
+        }
+        .learning-dot {
+          width: 8px;
+          height: 8px;
+          background: var(--accent);
+          border-radius: 50%;
+          animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.2)} }
 
-        .links { display: flex; gap: 14px; list-style: none; margin: 0; padding: 0; }
-        .links a { text-decoration: none; color: #0f172a; padding: 4px 8px; border-radius: 4px; }
-        .links li.active a, .links a:hover { background: #dbeafe; color: #111827; }
+        .links { display: flex; gap: 8px; list-style: none; margin: 0; padding: 0; }
+        .links a { 
+          text-decoration: none; 
+          color: var(--muted); 
+          padding: 8px 16px; 
+          border-radius: var(--radius); 
+          font-weight: 500;
+          font-size: 0.875rem;
+          transition: all 0.2s ease;
+        }
+        .links li.active a, .links a:hover { 
+          background: var(--primary); 
+          color: white; 
+          transform: translateY(-1px);
+          box-shadow: var(--shadow);
+        }
 
-        .status { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #334155; }
-        .status span { display: inline-flex; align-items: center; gap: 6px; }
-        .status em { font-style: normal; color: #0f172a; }
+        .status { 
+          display: flex; 
+          align-items: center; 
+          gap: 16px; 
+          font-size: 0.75rem; 
+          color: var(--muted);
+          background: var(--surface);
+          padding: 8px 16px;
+          border-radius: var(--radius-lg);
+          border: 1px solid var(--border);
+        }
+        .status span { display: inline-flex; align-items: center; gap: 8px; }
+        .status em { font-style: normal; color: var(--text); font-weight: 500; }
 
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 1px #00000010; }
-        .dot.up { background: #16a34a; animation: pulseUp 1.6s ease-in-out infinite; }
-        .dot.degraded { background: #f59e0b; animation: pulseDegraded 1.6s ease-in-out infinite; }
-        .dot.down { background: #dc2626; animation: pulseDown 1.6s ease-in-out infinite; }
-        .dot.unknown { background: #94a3b8; }
+        .dot { 
+          width: 8px; 
+          height: 8px; 
+          border-radius: 50%; 
+          display: inline-block; 
+          box-shadow: var(--shadow-sm);
+          transition: all 0.2s ease;
+        }
+        .dot.up { background: var(--success); animation: pulseUp 2s ease-in-out infinite; }
+        .dot.degraded { background: var(--warning); animation: pulseDegraded 2s ease-in-out infinite; }
+        .dot.down { background: var(--error); animation: pulseDown 2s ease-in-out infinite; }
+        .dot.unknown { background: var(--muted); }
 
-        @keyframes pulseUp { 0%,100%{ box-shadow:0 0 0 0 rgba(22,163,74,.6)} 50%{ box-shadow:0 0 0 6px rgba(22,163,74,0)} }
-        @keyframes pulseDegraded { 0%,100%{ box-shadow:0 0 0 0 rgba(245,158,11,.6)} 50%{ box-shadow:0 0 0 6px rgba(245,158,11,0)} }
-        @keyframes pulseDown { 0%,100%{ box-shadow:0 0 0 0 rgba(220,38,38,.6)} 50%{ box-shadow:0 0 0 6px rgba(220,38,38,0)} }
+        @keyframes pulseUp { 0%,100%{ box-shadow:0 0 0 0 rgba(16,185,129,0.4)} 50%{ box-shadow:0 0 0 8px rgba(16,185,129,0)} }
+        @keyframes pulseDegraded { 0%,100%{ box-shadow:0 0 0 0 rgba(245,158,11,0.4)} 50%{ box-shadow:0 0 0 8px rgba(245,158,11,0)} }
+        @keyframes pulseDown { 0%,100%{ box-shadow:0 0 0 0 rgba(239,68,68,0.4)} 50%{ box-shadow:0 0 0 8px rgba(239,68,68,0)} }
       `}</style>
     </nav>
   );
