@@ -1,22 +1,21 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
+import "./styles.css";
+import type { ReactNode } from "react";
+import Logout from "@/components/Logout";
+import AppSidebar from "@/components/AppSidebar";
 
-const inter = Inter({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: 'Reflections - GIC Rewards',
-  description: 'Log your thoughts; earn GIC; seal your day.',
-}
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body>
+        <div className="shell">
+          <AppSidebar />
+          <main className="main">{children}</main>
+        </div>
+        <div className="topbar">
+          <div className="grow" />
+          <Logout />
+        </div>
+      </body>
     </html>
-  )
+  );
 }
