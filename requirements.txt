@@ -1,3 +1,4 @@
+# Dependencies for HIVE-PAW API
 fastapi
 uvicorn
 pydantic
