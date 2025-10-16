@@ -5,10 +5,22 @@ services:
     buildCommand: |
       echo "Current directory: $(pwd)"
       echo "Files in directory: $(ls -la)"
-      echo "Checking requirements.txt:"
-      ls -la requirements.txt
-      cat requirements.txt
-      pip install -r requirements.txt
+      echo "Checking root requirements.txt:"
+      if [ -f "requirements.txt" ]; then
+        echo "Found root requirements.txt"
+        cat requirements.txt
+        pip install -r requirements.txt
+      else
+        echo "Root requirements.txt not found, trying app/requirements.txt:"
+        if [ -f "app/requirements.txt" ]; then
+          echo "Found app/requirements.txt"
+          cat app/requirements.txt
+          pip install -r app/requirements.txt
+        else
+          echo "No requirements.txt found anywhere!"
+          exit 1
+        fi
+      fi
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
