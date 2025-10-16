@@ -712,8 +712,10 @@ body{background:var(--bg); color:var(--ink);}
 }
 .empty-state p{
   margin:0;
-  font-size:0.875rem;
-  line-height:1.5;
+  font-size:0.9rem;
+  line-height:1.6;
+  color:var(--facebook-gold);
+  opacity:0.9;
 }
 .insights-panel{
   background:var(--panel);
