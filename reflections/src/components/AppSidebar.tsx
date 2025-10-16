@@ -5,13 +5,13 @@ import { useEffect, useState } from "react";
 import SidebarStatus from "@/components/SidebarStatus";
 
 const links = [
-  { href: "/feed", label: "Feed", icon: "📰" },      // default landing
-  { href: "/onboarding", label: "Onboarding", icon: "🧭" },
-  { href: "/login", label: "Login", icon: "🔐" },
-  { href: "/companion", label: "Companion", icon: "🤝" },
-  { href: "/forest", label: "Forest", icon: "🌳" },
-  { href: "/programs", label: "Programs", icon: "✨" },
-  { href: "/consensus", label: "Consensus", icon: "🗳️" },
+  { href: "/feed", label: "Feed", icon: "📰", description: "Community reflections" },
+  { href: "/onboarding", label: "Onboarding", icon: "🧭", description: "Get started" },
+  { href: "/login", label: "Login", icon: "🔐", description: "Sign in" },
+  { href: "/companion", label: "Companion", icon: "🤝", description: "AI assistant" },
+  { href: "/forest", label: "Forest", icon: "🌳", description: "Growth tracking" },
+  { href: "/programs", label: "Programs", icon: "✨", description: "Learning paths" },
+  { href: "/consensus", label: "Consensus", icon: "🗳️", description: "Community decisions" },
 ];
 
 export default function AppSidebar() {
@@ -41,20 +41,32 @@ export default function AppSidebar() {
   return (
     <>
       <button className="sb-toggle" aria-label="Toggle sidebar" onClick={() => setOpen(o=>!o)}>
-        ☰
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
       </button>
       <aside className={`sb ${open ? "open" : ""}`}>
         <div className="sb-head">
-          <span className="logo">✨</span>
-          <strong>Reflections</strong>
+          <div className="logo-container">
+            <span className="logo">✨</span>
+          </div>
+          <div className="brand-text">
+            <strong>Reflections</strong>
+            <span className="brand-subtitle">AI Companion</span>
+          </div>
         </div>
         <nav className="sb-nav">
           {links.map(l => {
             const active = pathname === l.href;
             return (
-              <Link key={l.href} href={l.href} className={`sb-link ${active ? "active" : ""}`}>
+              <Link key={l.href} href={l.href} className={`sb-link ${active ? "active" : ""}`} title={l.description}>
                 <span className="ic">{l.icon}</span>
-                <span>{l.label}</span>
+                <div className="link-content">
+                  <span className="link-label">{l.label}</span>
+                  <span className="link-description">{l.description}</span>
+                </div>
               </Link>
             );
           })}

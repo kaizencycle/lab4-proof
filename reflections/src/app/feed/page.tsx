@@ -49,49 +49,112 @@ export default function FeedPage(){
       <header className="fb-header">
         <div className="inner">
           <div className="brand">
-            <Image src="/sigil.svg" alt="Concord Sigil" width={24} height={24} />
-            <span>Reflections</span>
+            <div className="brand-icon">
+              <Image src="/sigil.svg" alt="Concord Sigil" width={28} height={28} />
+            </div>
+            <div className="brand-text">
+              <span className="brand-title">Reflections</span>
+              <span className="brand-subtitle">AI Learning Community</span>
+            </div>
           </div>
-          <span className="pill">balance: {gic.toFixed(2)} GIC</span>
-          <div style={{flex:1}}/>
-          <Link href="/companion" className="pill">Companion</Link>
-          <Link href="/forest" className="pill">Forest</Link>
-          <Link href="/programs" className="pill">Programs</Link>
+          <div className="header-actions">
+            <div className="balance-pill">
+              <span className="balance-icon">🪙</span>
+              <span className="balance-amount">{gic.toFixed(2)} GIC</span>
+            </div>
+            <div className="nav-pills">
+              <Link href="/companion" className="pill">
+                <span className="pill-icon">🤝</span>
+                <span>Companion</span>
+              </Link>
+              <Link href="/forest" className="pill">
+                <span className="pill-icon">🌳</span>
+                <span>Forest</span>
+              </Link>
+              <Link href="/programs" className="pill">
+                <span className="pill-icon">✨</span>
+                <span>Programs</span>
+              </Link>
+            </div>
+          </div>
         </div>
       </header>
       <main className="fb-shell">
-        <aside className="panel col">
-          <div className="row">
-            <Image src="/sigil.svg" alt="" width={36} height={36}/>
-            <div>
-              <div style={{fontWeight:700}}>{handle || "Guest"}</div>
-              <div className="mini">🪙 {gic.toFixed(2)} GIC</div>
+        <aside className="panel col user-panel">
+          <div className="user-card">
+            <div className="user-avatar-large">
+              <Image src="/sigil.svg" alt="" width={40} height={40}/>
+            </div>
+            <div className="user-info">
+              <div className="user-name">{handle || "Guest"}</div>
+              <div className="user-balance">🪙 {gic.toFixed(2)} GIC</div>
             </div>
           </div>
           <div className="divider"></div>
-          <div className="mini">Archetype Wheel (see Companion)</div>
-          <Link href="/companion" className="btn">Open Companion</Link>
+          <div className="panel-section">
+            <h4>Archetype Wheel</h4>
+            <p className="mini">Discover your learning archetype in the Companion</p>
+            <Link href="/companion" className="btn primary">
+              <span>Open Companion</span>
+              <span>→</span>
+            </Link>
+          </div>
         </aside>
 
-        <section className="col">
+        <section className="col main-feed">
+          <div className="feed-header">
+            <h2>Community Reflections</h2>
+            <p className="feed-subtitle">Share your insights and learn from others</p>
+          </div>
           <div className="panel">
             <ReflectionInput placeholder="What did you learn today?" onSubmit={onPost} busy={busy}/>
           </div>
           <div className="panel feed">
-            {feed.map(p => <ReflectionPost key={p.id} post={p} />)}
-            {feed.length===0 && <div className="mini">No reflections yet — be the first to share ✨</div>}
+            {feed.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">✨</div>
+                <h3>No reflections yet</h3>
+                <p>Be the first to share your insights with the community</p>
+              </div>
+            ) : (
+              feed.map(p => <ReflectionPost key={p.id} post={p} />)
+            )}
           </div>
         </section>
 
-        <aside className="panel rightcard">
-          <strong>Community Insights</strong>
-          <div className="row" style={{marginTop:8, flexWrap:"wrap"}}>
-            <span className="badge">✨ Insight: +1 XP</span>
-            <span className="badge">💡 Agree: +morale</span>
-            <span className="badge">🪞 Reflect: start thread</span>
+        <aside className="panel rightcard insights-panel">
+          <div className="insights-header">
+            <h3>Community Insights</h3>
+            <p className="mini">How to engage with reflections</p>
+          </div>
+          <div className="insights-badges">
+            <div className="insight-badge">
+              <span className="badge-icon">✨</span>
+              <div className="badge-content">
+                <div className="badge-title">Insight</div>
+                <div className="badge-desc">+1 XP</div>
+              </div>
+            </div>
+            <div className="insight-badge">
+              <span className="badge-icon">💡</span>
+              <div className="badge-content">
+                <div className="badge-title">Agree</div>
+                <div className="badge-desc">+morale</div>
+              </div>
+            </div>
+            <div className="insight-badge">
+              <span className="badge-icon">🪞</span>
+              <div className="badge-content">
+                <div className="badge-title">Reflect</div>
+                <div className="badge-desc">start thread</div>
+              </div>
+            </div>
           </div>
           <div className="divider"></div>
-          <div className="mini">Shards (heroes), Healing (sages), Meditation (monks) active now are visible on <Link href="/programs">Programs</Link>.</div>
+          <div className="programs-info">
+            <h4>Active Programs</h4>
+            <p className="mini">Shards (heroes), Healing (sages), Meditation (monks) are active now. Check out <Link href="/programs">Programs</Link> for more.</p>
+          </div>
         </aside>
       </main>
     </>
