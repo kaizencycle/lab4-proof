@@ -2,7 +2,13 @@ services:
   - type: web
     name: lab4-proof-api
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      echo "Current directory: $(pwd)"
+      echo "Files in directory: $(ls -la)"
+      echo "Checking requirements.txt:"
+      ls -la requirements.txt
+      cat requirements.txt
+      pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
