@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { COMPANIONS } from "@/lib/companions";
 import { authedFetchJSON } from "@/lib/fetchers";
+import { UserSession } from "@/lib/session";
 
 export default function Consensus(){
   const [user, setUser] = useState("");
@@ -12,7 +13,7 @@ export default function Consensus(){
   const [gic, setGic] = useState(0);
   useEffect(() => {
     (async () => {
-      const r = await fetch("/api/me"); const j = r.ok?await r.json():{};
+      const r = await fetch("/api/me"); const j: UserSession = r.ok?await r.json():{};
       setUser(j.handle||"");
     })();
   }, []);

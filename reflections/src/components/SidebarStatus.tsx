@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { UserSession } from "@/lib/session";
 
 export default function SidebarStatus(){
   const [handle, setHandle] = useState<string>("");
@@ -8,7 +9,7 @@ export default function SidebarStatus(){
 
   useEffect(() => {
     (async () => {
-      const r = await fetch("/api/me"); const j = r.ok ? await r.json() : {};
+      const r = await fetch("/api/me"); const j: UserSession = r.ok ? await r.json() : {};
       if (j?.handle) setHandle(j.handle);
     })();
   }, []);

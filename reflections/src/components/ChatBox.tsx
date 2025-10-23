@@ -77,7 +77,8 @@ export default function ChatBox({ civicId, token, companion = "jade" }: ChatBoxP
         />
         <button type="submit" className="chat-send">Send</button>
       </form>
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .chatbox {
           display: flex;
           flex-direction: column;
@@ -125,7 +126,8 @@ export default function ChatBox({ civicId, token, companion = "jade" }: ChatBoxP
           border-radius: 4px;
           cursor: pointer;
         }
-      `}</style>
+        `
+      }} />
     </div>
   );
 }

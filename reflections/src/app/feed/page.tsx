@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import "@/app/styles/reflections.css";
 import ReflectionInput from "@/components/ReflectionInput";
 import ReflectionPost, { Reflection } from "@/components/ReflectionPost";
+import { UserSession } from "@/lib/session";
 
 export default function FeedPage(){
   const [handle,setHandle]=useState<string>("");
@@ -13,7 +14,7 @@ export default function FeedPage(){
   const [busy,setBusy]=useState(false);
 
   useEffect(()=>{ (async()=>{
-    const me = await fetch("/api/me").then(r=>r.ok?r.json():{});
+    const me: UserSession = await fetch("/api/me").then(r=>r.ok?r.json():{});
     if (me?.handle){ setHandle(me.handle); }
     // initial balances (if configured)
     if (process.env.NEXT_PUBLIC_GIC_INDEXER_URL && me?.handle) {

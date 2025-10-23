@@ -6,6 +6,7 @@ import CompanionStore from "@/components/CompanionStore";
 import { useRouter } from "next/navigation";
 import { authedFetchJSON } from "@/lib/fetchers";
 import { ensureDefaultCompanion, loadUserCompanions, type UserCompanion } from "@/lib/customCompanions";
+import { UserSession } from "@/lib/session";
 
 export default function CompanionPage() {
   const [user, setUser] = useState("");
@@ -68,7 +69,7 @@ export default function CompanionPage() {
   useEffect(() => {
     (async () => {
       const r = await fetch("/api/me", { cache: "no-store" }).catch(() => null);
-      const j = r && r.ok ? await r.json() : null;
+      const j: UserSession | null = r && r.ok ? await r.json() : null;
       if (j?.handle) setUser(j.handle);
       setLoadingUser(false);
     })();

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authedFetchJSON } from "@/lib/fetchers";
+import { UserSession } from "@/lib/session";
 
 export default function ForestClient(){
   const [handle, setHandle] = useState("");
@@ -26,7 +27,7 @@ export default function ForestClient(){
 
   useEffect(() => {
     (async () => {
-      const r = await fetch("/api/me"); const j = r.ok?await r.json():{};
+      const r = await fetch("/api/me"); const j: UserSession = r.ok?await r.json():{};
       setHandle(j.handle||"");
     })();
   }, []);

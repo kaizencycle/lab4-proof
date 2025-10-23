@@ -101,7 +101,8 @@ export default function RegisterPage() {
         Already have an account? <a href="/login">Log in</a>
       </p>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .form {
           display: flex;
           flex-direction: column;
@@ -122,7 +123,8 @@ export default function RegisterPage() {
           opacity: 0.7;
           cursor: not-allowed;
         }
-      `}</style>
+        `
+      }} />
     </main>
   );
 }
