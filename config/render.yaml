@@ -4,8 +4,8 @@ services:
     env: python
     plan: starter
     region: oregon
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    buildCommand: "if [ -f requirements.txt ]; then pip install -r requirements.txt; elif [ -f ../requirements.txt ]; then pip install -r ../requirements.txt; else echo 'requirements.txt not found'; exit 1; fi"
+    startCommand: "uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: HUB_BASE_URL
         value: https://hive-paw-api.onrender.com
