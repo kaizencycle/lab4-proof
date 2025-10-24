@@ -1,4 +1,4 @@
-# Lab4-Proof 🚀
+# HIVE-PAW 🚀
 
 A secure, open-source ledger system combining **FastAPI backend** with **Next.js frontend** for reflection tracking and GIC rewards.
 
@@ -19,51 +19,73 @@ A secure, open-source ledger system combining **FastAPI backend** with **Next.js
 ## 📂 Project Structure
 
 ```
-lab4-proof/
-├── app/                    # FastAPI backend
-│   ├── main.py            # Main application
-│   ├── models.py          # Pydantic models
-│   ├── storage.py         # Data storage utilities
-│   ├── hashing.py         # Cryptographic functions
-│   └── routers/           # API route modules
-├── reflections/           # Next.js frontend
-├── .github/workflows/     # GitHub Actions automation
-├── data/                  # Ledger data (gitignored)
+hive-paw/
+├── backend/                 # Backend API (Python/FastAPI)
+│   ├── api/                # API routes and main application
+│   │   ├── main.py         # FastAPI application entry point
+│   │   └── routers/        # API route modules
+│   ├── core/               # Core business logic
+│   │   ├── models.py       # Pydantic models
+│   │   ├── storage.py      # Data storage utilities
+│   │   ├── hashing.py      # Cryptographic functions
+│   │   ├── auth.py         # Authentication logic
+│   │   └── ...
+│   └── utils/              # Utility functions
+├── frontend/               # Frontend (Next.js/React)
+│   ├── components/         # React components
+│   ├── pages/             # Next.js pages
+│   └── ...
+├── docs/                   # Documentation
+│   ├── api/               # API documentation
+│   ├── guides/            # User guides
+│   └── deployment/        # Deployment guides
+├── scripts/               # Automation scripts
+│   ├── powershell/        # PowerShell scripts
+│   ├── bash/             # Bash scripts
+│   └── automation/       # CI/CD scripts
 ├── tests/                 # Test suite
-└── scripts/               # Utility scripts
+│   ├── unit/             # Unit tests
+│   ├── integration/      # Integration tests
+│   └── fixtures/         # Test fixtures
+├── config/               # Configuration files
+├── data/                 # Data storage (gitignored)
+└── examples/             # Example files and patches
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - Node.js 18+
 - Git
 
 ### 1. Clone Repository
+
 ```bash
-git clone https://github.com/yourusername/lab4-proof.git
-cd lab4-proof
+git clone https://github.com/yourusername/hive-paw.git
+cd hive-paw
 ```
 
 ### 2. Backend Setup
+
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
 # Configure environment
-cp env.template .env
+cp config/.env.example .env
 # Edit .env with your configuration
 
 # Run development server
-cd app
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python main.py
 ```
 
 ### 3. Frontend Setup
+
 ```bash
 # Install dependencies
-cd reflections
+cd frontend
 npm install
 
 # Run development server
@@ -71,6 +93,7 @@ npm run dev
 ```
 
 ### 4. Access Application
+
 - **API**: http://localhost:8000
 - **Frontend**: http://localhost:3000
 - **API Docs**: http://localhost:8000/docs
@@ -79,7 +102,7 @@ npm run dev
 
 ### Environment Variables
 
-Copy `env.template` to `.env` and configure:
+Copy `config/.env.example` to `.env` and configure:
 
 ```bash
 # Required
@@ -131,6 +154,20 @@ This repository is **public-safe** with:
 
 See [SECURITY.md](SECURITY.md) for detailed security information.
 
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test categories
+pytest tests/unit/
+pytest tests/integration/
+
+# Run with coverage
+pytest --cov=backend
+```
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -146,8 +183,8 @@ This project is open source. See LICENSE file for details.
 ## 🆘 Support
 
 - 📖 [Documentation](docs/)
-- 🐛 [Issues](https://github.com/yourusername/lab4-proof/issues)
-- 💬 [Discussions](https://github.com/yourusername/lab4-proof/discussions)
+- 🐛 [Issues](https://github.com/yourusername/hive-paw/issues)
+- 💬 [Discussions](https://github.com/yourusername/hive-paw/discussions)
 
 ---
 
