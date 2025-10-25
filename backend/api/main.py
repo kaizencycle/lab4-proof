@@ -111,6 +111,13 @@ try:
 except Exception as e:
     log.error(f"❌ Failed to load genesis router: {e}")
 
+try:
+    from backend.api.routers import identity as identity_router
+    app.include_router(identity_router.router)
+    log.info("✅ Identity router loaded")
+except Exception as e:
+    log.error(f"❌ Failed to load identity router: {e}")
+
 # Admin token configuration
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
 

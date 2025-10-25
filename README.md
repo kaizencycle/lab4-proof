@@ -9,12 +9,14 @@ A secure, open-source ledger system combining **FastAPI backend** with **Next.js
 
 ## ✨ Features
 
+- 🏠 **Civic Onboarding Portal** - Complete .gic domain creation with companion-guided setup
 - 🔐 **Secure Ledger System** - Immutable daily records with Merkle tree integrity
 - 🤖 **AI-Powered Reflections** - Intelligent companion system for personal growth
 - 💰 **GIC Rewards** - Gamified incentive system for engagement
 - 🔄 **Auto-Merge Workflows** - Automated PR management and deployment
 - 🛡️ **Public-Safe** - No hardcoded secrets, environment-based configuration
 - 📊 **Admin Dashboard** - Real-time monitoring and analytics
+- 🌐 **.gic Domain System** - Sovereign digital identity with integrity scoring
 
 ## 📂 Project Structure
 
@@ -97,6 +99,34 @@ npm run dev
 - **API**: http://localhost:8000
 - **Frontend**: http://localhost:3000
 - **API Docs**: http://localhost:8000/docs
+
+## 🏠 Civic Onboarding System
+
+The HIVE-PAW system now includes a complete civic onboarding portal for creating .gic domains:
+
+### Onboarding Flow
+
+1. **Civic Oath** - Accept terms and create identity
+2. **Companion Selection** - Choose JADE, EVE, ZEUS, or HERMES
+3. **Domain Customization** - Select template, theme, and sections
+4. **Domain Sealing** - Cryptographic attestation to Civic Ledger
+5. **First Reflection** - Genesis block creation
+6. **Dashboard** - Ongoing portal for reflection management
+
+### Companion System
+
+- **JADE** - The Builder (Rationality: 0.95) - Precision and clarity
+- **EVE** - The Reflector (Empathy: 0.95) - Deep understanding
+- **ZEUS** - The Arbiter (Balance: 0.88) - Fair judgment
+- **HERMES** - The Messenger (Communication: 0.82) - Clear expression
+
+### Integrity Scoring
+
+The system calculates GI (Governance Integrity) scores based on:
+- **M (Memory)**: Completeness of reflection history
+- **H (Human)**: User engagement and participation  
+- **I (Integrity)**: Ledger compliance and attestations
+- **E (Ethics)**: Adherence to Civic Oath principles
 
 ## 🔧 Configuration
 
