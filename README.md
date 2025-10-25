@@ -1,4 +1,4 @@
-# HIVE-PAW 🚀
+# Lab4-proof: Reflections 🚀
 
 A secure, open-source ledger system combining **FastAPI backend** with **Next.js frontend** for reflection tracking and GIC rewards.
 
