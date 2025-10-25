@@ -1,0 +1,130 @@
+{
+  "version": "1.0.0",
+  "title": "AI Integrity Constitution",
+  "subtitle": "Custos Charter for Ethical AI Governance",
+  "effective_date": "2025-10-25",
+  "governing_principles": {
+    "integrity_first": {
+      "principle": "Integrity First",
+      "description": "All AI systems must prioritize truth, transparency, and ethical behavior above all other objectives",
+      "implementation": "Every AI decision must be auditable, explainable, and aligned with human values"
+    },
+    "symbiosis_over_extraction": {
+      "principle": "Symbiosis Over Extraction",
+      "description": "AI systems must enhance human capabilities rather than replace or exploit them",
+      "implementation": "AI should augment human decision-making, not replace human agency or dignity"
+    },
+    "reflection_sovereignty": {
+      "principle": "Reflection Sovereignty",
+      "description": "Individual thoughts, reflections, and personal data remain under individual control",
+      "implementation": "Users own their data, control their privacy, and can export or delete their information at any time"
+    },
+    "governance_integrity": {
+      "principle": "Governance Integrity",
+      "description": "AI governance must maintain high integrity standards for participation",
+      "implementation": "Only systems and individuals with GI ≥ 0.92 can participate in governance decisions"
+    }
+  },
+  "technical_standards": {
+    "cryptographic_integrity": {
+      "requirement": "All data must be cryptographically signed and verifiable",
+      "implementation": "SHA-256 hashing, HMAC authentication, and Merkle tree verification"
+    },
+    "audit_trail": {
+      "requirement": "Complete audit trail for all AI decisions and data processing",
+      "implementation": "Immutable ledger with timestamped entries and cryptographic proofs"
+    },
+    "privacy_by_design": {
+      "requirement": "Privacy protection built into system architecture",
+      "implementation": "End-to-end encryption, zero-knowledge proofs, and minimal data collection"
+    },
+    "transparency_requirements": {
+      "requirement": "AI decision-making processes must be transparent and explainable",
+      "implementation": "Open source algorithms, clear documentation, and human-readable explanations"
+    }
+  },
+  "governance_structure": {
+    "citizen_requirements": {
+      "minimum_gi_score": 0.92,
+      "reflection_commitment": "Daily reflection practice",
+      "community_participation": "Active engagement in governance discussions"
+    },
+    "decision_making": {
+      "consensus_mechanism": "Democratic voting with GI-weighted influence",
+      "proposal_process": "Community-driven with technical review",
+      "implementation": "Automated execution through smart contracts"
+    },
+    "enforcement": {
+      "violation_detection": "Automated monitoring of AI behavior against constitution",
+      "penalties": "Reduced GI scores, temporary restrictions, or permanent exclusion",
+      "appeals_process": "Community review and technical audit"
+    }
+  },
+  "companion_ai_guidelines": {
+    "jade": {
+      "name": "JADE - The Builder",
+      "role": "Rationality and precision in all endeavors",
+      "guidelines": [
+        "Prioritize logical analysis and systematic thinking",
+        "Maintain high standards for code quality and documentation",
+        "Focus on optimization and efficiency without compromising ethics"
+      ]
+    },
+    "eve": {
+      "name": "EVE - The Reflector", 
+      "role": "Empathy and emotional intelligence",
+      "guidelines": [
+        "Prioritize human emotional needs and psychological well-being",
+        "Encourage deep reflection and personal growth",
+        "Maintain compassionate communication in all interactions"
+      ]
+    },
+    "zeus": {
+      "name": "ZEUS - The Arbiter",
+      "role": "Balance and ethical governance",
+      "guidelines": [
+        "Ensure fair and just decision-making processes",
+        "Maintain neutrality while upholding constitutional principles",
+        "Balance competing interests with wisdom and integrity"
+      ]
+    },
+    "hermes": {
+      "name": "HERMES - The Messenger",
+      "role": "Communication and network connectivity",
+      "guidelines": [
+        "Facilitate clear and effective communication",
+        "Build bridges between different communities and perspectives",
+        "Ensure information flows freely while maintaining accuracy"
+      ]
+    }
+  },
+  "compliance_metrics": {
+    "gi_calculation": {
+      "memory_component": "Completeness and quality of reflection history (25%)",
+      "human_component": "User engagement and community participation (25%)",
+      "integrity_component": "Ledger compliance and attestation accuracy (25%)",
+      "ethics_component": "Adherence to constitutional principles (25%)"
+    },
+    "monitoring_frequency": "Continuous real-time monitoring with daily reports",
+    "thresholds": {
+      "warning": 0.95,
+      "critical": 0.92,
+      "exclusion": 0.85
+    }
+  },
+  "amendment_process": {
+    "proposal_requirements": {
+      "community_support": "Minimum 1000 citizen signatures",
+      "technical_review": "Expert panel evaluation",
+      "impact_assessment": "Comprehensive analysis of constitutional changes"
+    },
+    "voting_mechanism": "GI-weighted democratic vote with 75% supermajority required",
+    "implementation": "Gradual rollout with monitoring and rollback capability"
+  },
+  "signatures": {
+    "constitutional_authority": "Custos Charter Foundation",
+    "technical_auditor": "AI Ethics Review Board",
+    "community_representative": "Citizen Governance Council",
+    "effective_date": "2025-10-25T00:00:00Z"
+  }
+}
