@@ -13,10 +13,12 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
+# Import and export the app for Uvicorn
+from backend.api.main import app
+
 if __name__ == "__main__":
     import uvicorn
-    from backend.api.main import app
-    
+
     # Run the FastAPI application
     uvicorn.run(
         "backend.api.main:app",
